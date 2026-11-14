@@ -1,0 +1,13 @@
+{
+  "name": "hinh-agent-harness",
+  "version": "1.0.0",
+  "description": "Example harness for HinH's next-steps agent: rubric, cases, test data, an eval runner, and a Wizard of Oz page.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "eval": "node src/eval.js",
+    "test": "node --test tests/*.test.js"
+  }
+}

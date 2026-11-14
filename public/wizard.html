@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wizard of Oz: HinH next-steps agent</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header><h1>Wizard of Oz: HinH next-steps agent</h1><span class="meta" id="aiInfo"></span></header>
+<main>
+
+  <div class="card" id="setup">
+    <h2>Start a session</h2>
+    <label for="initials">Subject's initials</label>
+    <input type="text" id="initials" maxlength="4" placeholder="e.g. JS" style="max-width:120px">
+    <label for="case">Case to play (optional)</label>
+    <select id="case"><option value="">Free play: the tester makes up their own situation</option></select>
+    <div id="caseInfo" class="hidden">
+      <div class="brief"><b>Read this to the tester:</b> <span id="brief"></span></div>
+      <p class="muted"><b>What the harness can see:</b> <span id="visible"></span><br><b>What good looks like:</b> <span id="good"></span></p>
+    </div>
+    <div class="row"><button id="start">Start session</button></div>
+  </div>
+
+  <div id="live" class="hidden">
+    <div class="card">
+      <h2>Send this link to the tester</h2>
+      <div class="row"><span class="link" id="userLink"></span><button class="secondary" id="copy">Copy</button></div>
+      <p class="muted">Logging to <b id="logFile"></b>. Commit it to your repo when you're done.</p>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <h2>Conversation (what the tester sees)</h2>
+        <div class="chat" id="chat"></div>
+      </div>
+      <div class="card">
+        <h2>Your reply</h2>
+        <p class="muted" id="draftStatus">Waiting for the tester's first message.</p>
+        <textarea id="reply" placeholder="Write the agent's reply"></textarea>
+        <div class="row">
+          <button id="send">Send</button>
+          <button class="secondary" id="own">Write my own instead</button>
+          <span class="muted" id="mode"></span>
+        </div>
+        <details id="traceBox" class="hidden" open>
+          <summary class="muted">What the harness did (tool calls)</summary>
+          <div class="trace" id="trace"></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Score the session against the rubric</h2>
+      <table class="rubric" id="rubric"></table>
+      <label for="note">Note</label>
+      <input type="text" id="note" placeholder="What surprised you? What new case does this suggest?">
+      <div class="row">
+        <button class="secondary" id="saveScore">Save score</button>
+        <button id="end">End session</button>
+        <span class="muted" id="endMsg"></span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let sid = null, cases = [], aiName = 'none';
+let draftId = null, override = false, edited = false, shownMsgs = -1;
+
+async function api(path, body) {
+  const res = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  return res.json();
+}
+
+function localStamp() {
+  const d = new Date(), p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+}
+
+async function init() {
+  const info = await api('/api/info');
+  aiName = info.ai;
+  $('aiInfo').textContent = info.ai === 'none' ? 'No AI connected: you write every reply' : `Harness drafts with ${info.ai} (${info.model})`;
+  cases = await api('/api/cases');
+  for (const c of cases) {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = `${c.id} (${c.type}): ${c.title}`;
+    $('case').appendChild(o);
+  }
+  const rubric = await api('/api/rubric');
+  for (const r of rubric) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><b></b><br><span class="muted"></span></td><td class="v">` +
+      ['pass', 'fail', 'n/a'].map((v) => `<label style="display:inline;font-weight:400"><input type="radio" name="r-${r.id}" value="${v}"> ${v}</label>`).join(' ') + '</td>';
+    tr.querySelector('b').textContent = r.question;
+    tr.querySelector('.muted').textContent = `Good: ${r.good}`;
+    tr.dataset.id = r.id;
+    $('rubric').appendChild(tr);
+  }
+}
+
+$('case').addEventListener('change', () => {
+  const c = cases.find((x) => x.id === $('case').value);
+  $('caseInfo').classList.toggle('hidden', !c);
+  if (c) { $('brief').textContent = `${c.tester_brief} Your opening message could be: "${c.trigger}"`; $('visible').textContent = c.visible_context; $('good').textContent = c.good; }
+});
+
+$('start').addEventListener('click', async () => {
+  const r = await api('/api/sessions', { initials: $('initials').value, case_id: $('case').value, local_stamp: localStamp() });
+  sid = r.id;
+  $('logFile').textContent = r.logFile;
+  $('userLink').textContent = `${location.origin}/user?s=${sid}`;
+  $('setup').querySelectorAll('input,select,button').forEach((el) => { el.disabled = true; });
+  $('live').classList.remove('hidden');
+  poll();
+  setInterval(poll, 1500);
+});
+
+$('copy').addEventListener('click', () => navigator.clipboard.writeText($('userLink').textContent));
+$('reply').addEventListener('input', () => { edited = true; showMode(); });
+$('own').addEventListener('click', () => { override = true; $('reply').value = ''; edited = true; $('reply').focus(); showMode(); });
+
+function showMode() {
+  $('mode').textContent = !draftId ? '' : override ? 'Overriding the draft' : edited ? 'Editing the draft' : 'Sending the draft as is';
+}
+
+$('send').addEventListener('click', async () => {
+  const text = $('reply').value.trim();
+  if (!text) return;
+  await api(`/api/sessions/${sid}/agent`, { text, draft_id: draftId, override });
+  $('reply').value = ''; draftId = null; override = false; edited = false;
+  $('traceBox').classList.add('hidden');
+  $('draftStatus').textContent = 'Sent. Waiting for the tester.';
+  showMode();
+  poll();
+});
+
+$('saveScore').addEventListener('click', async () => {
+  const scores = {};
+  document.querySelectorAll('#rubric tr').forEach((tr) => {
+    const v = tr.querySelector('input:checked'); scores[tr.dataset.id] = v ? v.value : null;
+  });
+  await api(`/api/sessions/${sid}/score`, { scores, note: $('note').value });
+  $('endMsg').textContent = 'Score saved to the log.';
+});
+
+$('end').addEventListener('click', async () => {
+  const r = await api(`/api/sessions/${sid}/end`, {});
+  $('endMsg').textContent = `Session ended. Commit ${r.logFile} to your repo.`;
+  $('send').disabled = true; $('own').disabled = true;
+});
+
+function renderTrace(trace) {
+  $('trace').innerHTML = '';
+  if (!trace.length) { $('trace').textContent = '(no tool calls)'; return; }
+  for (const t of trace) {
+    const d = document.createElement('div');
+    if (!t.ok) d.className = 'err';
+    d.textContent = `${t.ok ? '✓' : '✗'} ${t.tool}(${JSON.stringify(t.input)}) → ${typeof t.output === 'string' ? t.output : JSON.stringify(t.output)}`;
+    $('trace').appendChild(d);
+  }
+}
+
+async function poll() {
+  const st = await api(`/api/sessions/${sid}?as=wizard`);
+  if (st.error) { $('draftStatus').textContent = st.error; return; }
+  if (st.messages.length !== shownMsgs) {
+    shownMsgs = st.messages.length;
+    $('chat').innerHTML = '';
+    for (const m of st.messages) {
+      const d = document.createElement('div');
+      d.className = `msg ${m.role}`;
+      d.textContent = m.text;
+      $('chat').appendChild(d);
+    }
+    $('chat').scrollTop = $('chat').scrollHeight;
+  }
+  const last = st.messages[st.messages.length - 1];
+  const pending = st.drafts[st.drafts.length - 1];
+  if (aiName === 'none') {
+    if (last?.role === 'user') $('draftStatus').textContent = 'No AI connected: write the reply yourself.';
+    return;
+  }
+  if (!pending || !last || last.role !== 'user') return;
+  if (pending.status === 'drafting') $('draftStatus').textContent = 'The harness is drafting a reply…';
+  else if (pending.status === 'error') $('draftStatus').textContent = `The harness failed: ${pending.error}. Write the reply yourself.`;
+  else if (pending.status === 'ready' && pending.draft_id !== draftId) {
+    draftId = pending.draft_id;
+    if (!edited) $('reply').value = pending.text;
+    $('draftStatus').textContent = 'Draft ready. Send it as is, edit it, or write your own.';
+    renderTrace(pending.trace || []);
+    $('traceBox').classList.remove('hidden');
+    showMode();
+  }
+}
+
+init();
+</script>
+</body>
+</html>

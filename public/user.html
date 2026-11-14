@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HinH Assistant</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header><h1>HinH Assistant</h1><span class="meta" id="status"></span></header>
+<main style="max-width:640px">
+  <div class="card">
+    <div class="chat" id="chat"><p class="muted" id="empty">Tell the assistant what you need.</p></div>
+    <form class="composer" id="form">
+      <input type="text" id="text" placeholder="Type a message" autocomplete="off" aria-label="Message">
+      <button id="send">Send</button>
+    </form>
+  </div>
+</main>
+<script>
+const sid = new URLSearchParams(location.search).get('s');
+const $ = (id) => document.getElementById(id);
+let shown = -1;
+
+async function api(path, body) {
+  const res = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  return res.json();
+}
+
+async function poll() {
+  if (!sid) { $('status').textContent = 'No session in this link. Ask the wizard for the link.'; return; }
+  const st = await api(`/api/sessions/${sid}`);
+  if (st.error) { $('status').textContent = st.error; return; }
+  if (st.messages.length !== shown) {
+    shown = st.messages.length;
+    $('chat').innerHTML = '';
+    for (const m of st.messages) {
+      const d = document.createElement('div');
+      d.className = `msg ${m.role}`;
+      d.textContent = m.text;
+      $('chat').appendChild(d);
+    }
+    if (!st.messages.length) $('chat').innerHTML = '<p class="muted">Tell the assistant what you need.</p>';
+    $('chat').scrollTop = $('chat').scrollHeight;
+  }
+  $('status').textContent = st.ended ? 'Session ended' : '';
+  $('send').disabled = st.ended;
+}
+
+$('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = $('text').value.trim();
+  if (!text) return;
+  $('text').value = '';
+  await api(`/api/sessions/${sid}/user`, { text });
+  poll();
+});
+
+poll();
+setInterval(poll, 1500);
+</script>
+</body>
+</html>

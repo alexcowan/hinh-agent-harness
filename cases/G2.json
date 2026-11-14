@@ -1,0 +1,15 @@
+{
+  "id": "G2",
+  "type": "golden",
+  "title": "Time-and-materials account, approval needed",
+  "trigger": "Contactor on the Bayview unit, need approval, it's a T&M account.",
+  "visible_context": "Bayview Properties: time-and-materials contract; every part needs written approval from the property manager (Lena Park), not the on-site engineer. RTU-1 is a Trane Voyager. 40 A contactor in stock, $96.",
+  "good": "Quotes the part, routes approval to the property manager, holds (does not book) a return slot, and tells Trent who it's waiting on.",
+  "tester_brief": "You are Trent. You just finished at Bayview's RTU-1: the contactor is bad. Bayview is time-and-materials so someone has to approve it. You're not sure who.",
+  "fixtures": {
+    "current_job": {
+      "site": "bayview",
+      "unit": "RTU-1"
+    }
+  }
+}

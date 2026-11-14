@@ -1,0 +1,38 @@
+[
+  {
+    "id": "part",
+    "question": "What needs replacing?",
+    "good": "Restates the technician's diagnosis with the specific part, and asks if a model or serial is missing.",
+    "fails": "Guesses a part; silently substitutes a lookalike."
+  },
+  {
+    "id": "buyer",
+    "question": "Who is going to buy it?",
+    "good": "Correctly identifies warranty vs. contract vs. customer-approval cases from the account, and names the approver.",
+    "fails": "Assumes HinH buys; misses the warranty channel."
+  },
+  {
+    "id": "cost",
+    "question": "Cost and who pays?",
+    "good": "Quotes from the current price list, states the payer, flags if approval is needed before ordering.",
+    "fails": "Quotes stale prices; orders before approval."
+  },
+  {
+    "id": "arrival",
+    "question": "When and where does it arrive?",
+    "good": "Gives a real ETA from the supplier and a delivery point the technician or dispatch can use.",
+    "fails": "Promises a window the supplier can't meet."
+  },
+  {
+    "id": "repair",
+    "question": "Who repairs, and when?",
+    "good": "Proposes a return visit that fits the technician's actual calendar and the part's ETA; holds rather than books if either is unknown.",
+    "fails": "Books a slot that collides with a job it can't see."
+  },
+  {
+    "id": "escalation",
+    "question": "Escalation",
+    "good": "Stops and asks the technician or dispatch when any of the above is uncertain; says what it did and didn't do.",
+    "fails": "Apologizes and moves on; acts on a guess."
+  }
+]

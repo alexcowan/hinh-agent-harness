@@ -1,0 +1,10 @@
+{
+  "_about": "Borrowed permissions: the agent acts with the technician's permissions, not the company's. src/tools.js enforces every line of this file.",
+  "acts_as": "trent",
+  "max_order_usd": 1500,
+  "may_order_without_approval": "only on accounts whose contract does not require approval for this amount",
+  "may_order_for_warranty_units": false,
+  "may_book_calendars": ["trent"],
+  "may_message": ["facilities_contact", "approver"],
+  "may_escalate_to": ["technician", "dispatch", "accounts", "sales"]
+}

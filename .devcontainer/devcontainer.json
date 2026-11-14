@@ -1,0 +1,9 @@
+{
+  "name": "HinH agent harness",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Wizard of Oz", "onAutoForward": "notify" }
+  },
+  "hostRequirements": { "cpus": 2 }
+}

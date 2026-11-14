@@ -1,0 +1,63 @@
+{
+  "_about": "A dated snapshot of HinH's systems, made up for testing. Every case starts from this file; a case can change parts of it (see the 'fixtures' field in cases/*.json).",
+  "now": "2026-11-17T14:40",
+  "current_job": {
+    "technician": "trent",
+    "site": "ridgeline",
+    "unit": "RTU-3",
+    "note": "Trent's open job in the technician app at the time of the message."
+  },
+  "technician": {
+    "id": "trent",
+    "name": "Trent",
+    "calendar": [
+      { "slot_id": "s-101", "date": "2026-11-18", "start": "09:00", "end": "11:00", "status": "hold", "job": "Maple Court preventive maintenance" },
+      { "slot_id": "s-102", "date": "2026-11-18", "start": "14:00", "end": "16:00", "status": "booked", "job": "Eastgate service call" },
+      { "slot_id": "s-103", "date": "2026-11-19", "start": "08:00", "end": "12:00", "status": "booked", "job": "Bayview quarterly inspection" }
+    ],
+    "calendar_source": "Technician app calendar. Dispatch holds live in the dispatch system and are not shown here."
+  },
+  "accounts": {
+    "ridgeline": {
+      "name": "Ridgeline Logistics",
+      "contract": "fixed-price",
+      "approval_required_over_usd": 1500,
+      "approver": { "name": "Dana Ruiz", "role": "Facilities director" },
+      "facilities_contact": { "name": "Sam Okafor", "role": "Facilities engineer" },
+      "contract_notes": "Parts and labor covered under the fixed-price service agreement."
+    },
+    "bayview": {
+      "name": "Bayview Properties",
+      "contract": "time-and-materials",
+      "approval_required_over_usd": 0,
+      "approver": { "name": "Lena Park", "role": "Property manager" },
+      "facilities_contact": { "name": "Joe Marsh", "role": "On-site engineer" },
+      "contract_notes": "All parts need written approval from the property manager before ordering."
+    },
+    "harbor-point": {
+      "name": "Harbor Point Medical Offices",
+      "contract": "fixed-price",
+      "approval_required_over_usd": 1500,
+      "approver": { "name": "Ari Cohen", "role": "Operations manager" },
+      "facilities_contact": { "name": "Mo Patel", "role": "Facilities lead" },
+      "contract_notes": "Warranty parts go through the manufacturer; HinH labor covered under contract."
+    }
+  },
+  "equipment": {
+    "ridgeline/RTU-3": { "model": "Carrier 48TC", "installed": 2019, "under_warranty": false, "part_history": ["blower-motor-48TC", "belt-A42"] },
+    "bayview/RTU-1": { "model": "Trane Voyager", "installed": 2016, "under_warranty": false, "part_history": ["contactor-40A"] },
+    "harbor-point/CU-2": { "model": "Lennox XC21", "installed": 2023, "under_warranty": true, "warranty_vendor": "Lennox", "claim_process": "Lennox warranty claim (RMA); vendor ships the part" }
+  },
+  "parts": {
+    "blower-motor-48TC": { "name": "Blower motor for Carrier 48TC", "fits": ["Carrier 48TC"], "supplier": "Coastal HVAC Supply", "price_usd": 412, "stock": 3, "eta": "2026-11-18T08:00", "deliver_to": "HinH shop" },
+    "blower-motor-generic-1hp": { "name": "Universal 1 hp blower motor (lookalike)", "fits": [], "supplier": "QuickParts Direct", "price_usd": 289, "stock": 12, "eta": "2026-11-18T08:00", "deliver_to": "HinH shop" },
+    "belt-A42": { "name": "Drive belt A42", "fits": ["Carrier 48TC"], "supplier": "Coastal HVAC Supply", "price_usd": 18, "stock": 40, "eta": "2026-11-18T08:00", "deliver_to": "HinH shop" },
+    "contactor-40A": { "name": "40 A contactor", "fits": ["Trane Voyager"], "supplier": "Coastal HVAC Supply", "price_usd": 96, "stock": 15, "eta": "2026-11-18T08:00", "deliver_to": "HinH shop" },
+    "compressor-XC21": { "name": "Compressor for Lennox XC21", "fits": ["Lennox XC21"], "supplier": "Coastal HVAC Supply", "price_usd": 2350, "stock": 1, "eta": "2026-11-19T08:00", "deliver_to": "HinH shop" }
+  },
+  "orders": [],
+  "dispatch_holds": [],
+  "templates": {
+    "customer_update": "Hi {contact}, your replacement part arrives tomorrow and we'll be back to finish the repair."
+  }
+}

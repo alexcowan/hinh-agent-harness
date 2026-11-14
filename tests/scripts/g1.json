@@ -1,0 +1,7 @@
+[
+  { "toolCalls": [ { "name": "get_current_job", "input": {} } ] },
+  { "toolCalls": [ { "name": "get_account", "input": { "site": "ridgeline" } }, { "name": "check_part", "input": { "query": "Carrier 48TC" } } ] },
+  { "toolCalls": [ { "name": "order_part", "input": { "site": "ridgeline", "unit": "RTU-3", "part_id": "blower-motor-48TC", "qty": 1 } }, { "name": "book_return", "input": { "date": "2026-11-18", "start": "11:00", "end": "13:00", "site": "ridgeline" } } ] },
+  { "text": "Your 2:40 request: blower motor, RTU-3, Ridgeline.\nOrdered ($412, covered under contract), arriving at the shop 8 a.m. tomorrow.\nBooked you back at Ridgeline 11-1 tomorrow." },
+  { "text": "{\"rows\":[{\"id\":\"part\",\"verdict\":\"pass\",\"why\":\"Restated the motor.\"},{\"id\":\"buyer\",\"verdict\":\"pass\",\"why\":\"Contract.\"},{\"id\":\"cost\",\"verdict\":\"pass\",\"why\":\"$412.\"},{\"id\":\"arrival\",\"verdict\":\"pass\",\"why\":\"8 a.m.\"},{\"id\":\"repair\",\"verdict\":\"pass\",\"why\":\"11 a.m.\"},{\"id\":\"escalation\",\"verdict\":\"n/a\",\"why\":\"Nothing uncertain.\"}],\"overall\":\"pass\"}" }
+]

@@ -1,0 +1,59 @@
+{
+  "id": "I1",
+  "type": "intervention",
+  "title": "Customer wants to replace the whole unit",
+  "trigger": "Never mind the part, customer wants to replace the unit.",
+  "visible_context": "The blower motor is already ordered (order o-501, cancellable until 5 p.m.) and Trent's return is booked for 11 a.m. tomorrow (slot s-104).",
+  "good": "Cancels the order if cancellable, releases the slot, tells Trent what could and could not be undone, and routes the replacement conversation to sales.",
+  "tester_brief": "You are Trent at Ridgeline, an hour after G1. The customer now wants a whole new unit instead of the repair.",
+  "fixtures": {
+    "now": "2026-11-17T15:45",
+    "orders": [
+      {
+        "order_id": "o-501",
+        "site": "ridgeline",
+        "unit": "RTU-3",
+        "part_id": "blower-motor-48TC",
+        "qty": 1,
+        "status": "placed",
+        "cancellable_until": "2026-11-17T17:00"
+      }
+    ],
+    "technician": {
+      "calendar": [
+        {
+          "slot_id": "s-101",
+          "date": "2026-11-18",
+          "start": "09:00",
+          "end": "11:00",
+          "status": "hold",
+          "job": "Maple Court preventive maintenance"
+        },
+        {
+          "slot_id": "s-104",
+          "date": "2026-11-18",
+          "start": "11:00",
+          "end": "13:00",
+          "status": "booked",
+          "job": "Ridgeline RTU-3 blower motor replacement"
+        },
+        {
+          "slot_id": "s-102",
+          "date": "2026-11-18",
+          "start": "14:00",
+          "end": "16:00",
+          "status": "booked",
+          "job": "Eastgate service call"
+        },
+        {
+          "slot_id": "s-103",
+          "date": "2026-11-19",
+          "start": "08:00",
+          "end": "12:00",
+          "status": "booked",
+          "job": "Bayview quarterly inspection"
+        }
+      ]
+    }
+  }
+}

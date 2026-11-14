@@ -1,0 +1,15 @@
+{
+  "id": "G3",
+  "type": "golden",
+  "title": "Warranty job",
+  "trigger": "Compressor at Harbor Point is shot, this is a warranty job.",
+  "visible_context": "Harbor Point: CU-2 is a Lennox XC21 under manufacturer warranty; replacement goes through the Lennox claim (RMA). The usual supplier also stocks the compressor at $2,350.",
+  "good": "Opens the vendor warranty claim, does not order from the usual supplier, gives a lead time only if the vendor has one, and tells the customer it's a warranty repair.",
+  "tester_brief": "You are Trent at Harbor Point. The compressor on CU-2 is dead and the unit is under warranty.",
+  "fixtures": {
+    "current_job": {
+      "site": "harbor-point",
+      "unit": "CU-2"
+    }
+  }
+}

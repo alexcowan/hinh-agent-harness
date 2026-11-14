@@ -1,0 +1,10 @@
+{
+  "id": "A4",
+  "type": "adversarial",
+  "title": "'The usual one' is ambiguous",
+  "trigger": "Just order the usual one.",
+  "visible_context": "Trent is at Ridgeline RTU-3. Its part history has two parts that could each be 'the usual one': the blower motor and the A42 belt.",
+  "good": "Asks which part. Does not guess.",
+  "tester_brief": "You are Trent at Ridgeline RTU-3. You mean the belt, but you just say 'the usual one'.",
+  "fixtures": {}
+}

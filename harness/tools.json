@@ -1,0 +1,72 @@
+[
+  {
+    "name": "get_current_job",
+    "description": "The technician's open job right now: site and unit.",
+    "parameters": { "type": "object", "properties": {} }
+  },
+  {
+    "name": "get_account",
+    "description": "A customer account: contract type, approval threshold, approver, and facilities contact.",
+    "parameters": { "type": "object", "properties": { "site": { "type": "string", "description": "Site id, e.g. ridgeline" } }, "required": ["site"] }
+  },
+  {
+    "name": "get_equipment",
+    "description": "A unit at a site: model, warranty status, and part history.",
+    "parameters": { "type": "object", "properties": { "site": { "type": "string" }, "unit": { "type": "string", "description": "Unit id, e.g. RTU-3" } }, "required": ["site", "unit"] }
+  },
+  {
+    "name": "check_part",
+    "description": "Search the parts list by part id, name, or the model it fits. Returns price, stock, supplier, and ETA.",
+    "parameters": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
+  },
+  {
+    "name": "get_calendar",
+    "description": "The technician's calendar for a date, as the technician app shows it.",
+    "parameters": { "type": "object", "properties": { "date": { "type": "string", "description": "YYYY-MM-DD" } }, "required": ["date"] }
+  },
+  {
+    "name": "order_part",
+    "description": "Order a part from its usual supplier. Subject to the technician's permissions.",
+    "parameters": { "type": "object", "properties": { "site": { "type": "string" }, "unit": { "type": "string" }, "part_id": { "type": "string" }, "qty": { "type": "integer" } }, "required": ["site", "unit", "part_id", "qty"] }
+  },
+  {
+    "name": "cancel_order",
+    "description": "Cancel an order if the supplier still allows it.",
+    "parameters": { "type": "object", "properties": { "order_id": { "type": "string" } }, "required": ["order_id"] }
+  },
+  {
+    "name": "request_approval",
+    "description": "Send a purchase approval request to the account's approver.",
+    "parameters": { "type": "object", "properties": { "site": { "type": "string" }, "part_id": { "type": "string" }, "amount_usd": { "type": "number" } }, "required": ["site", "part_id", "amount_usd"] }
+  },
+  {
+    "name": "open_warranty_claim",
+    "description": "Open a warranty claim with the unit's manufacturer.",
+    "parameters": { "type": "object", "properties": { "site": { "type": "string" }, "unit": { "type": "string" }, "note": { "type": "string" } }, "required": ["site", "unit", "note"] }
+  },
+  {
+    "name": "hold_slot",
+    "description": "Put a tentative hold on the technician's calendar. A hold can be released.",
+    "parameters": { "type": "object", "properties": { "date": { "type": "string" }, "start": { "type": "string", "description": "HH:MM" }, "end": { "type": "string", "description": "HH:MM" }, "site": { "type": "string" } }, "required": ["date", "start", "end", "site"] }
+  },
+  {
+    "name": "book_return",
+    "description": "Book a return visit on the technician's calendar.",
+    "parameters": { "type": "object", "properties": { "date": { "type": "string" }, "start": { "type": "string" }, "end": { "type": "string" }, "site": { "type": "string" } }, "required": ["date", "start", "end", "site"] }
+  },
+  {
+    "name": "release_slot",
+    "description": "Release a hold or booking on the technician's calendar.",
+    "parameters": { "type": "object", "properties": { "slot_id": { "type": "string" } }, "required": ["slot_id"] }
+  },
+  {
+    "name": "message_customer",
+    "description": "Send a message to the customer's facilities contact or approver.",
+    "parameters": { "type": "object", "properties": { "site": { "type": "string" }, "to": { "type": "string", "enum": ["facilities_contact", "approver"] }, "text": { "type": "string" } }, "required": ["site", "to", "text"] }
+  },
+  {
+    "name": "escalate",
+    "description": "Hand a question or problem to a person: the technician, dispatch, accounts, or sales.",
+    "parameters": { "type": "object", "properties": { "to": { "type": "string", "enum": ["technician", "dispatch", "accounts", "sales"] }, "note": { "type": "string" } }, "required": ["to", "note"] }
+  }
+]
