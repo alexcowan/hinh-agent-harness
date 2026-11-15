@@ -80,7 +80,7 @@
   <div class="card wiz">
     <h2><span class="step">1</span>Pick a case</h2>
     <select id="case"></select>
-    <div class="row"><button class="secondary" id="reset">Start over</button></div>
+    <div class="row"><button class="secondary hidden" id="reset">Restart this case</button></div>
   </div>
 
   <div class="cols">
@@ -218,7 +218,7 @@ function pick() {
   reset();
 }
 function reset() {
-  chat = []; renderChat(); broadcast(); phase = 'idle'; if (cur) delete cur._laterUsed;
+  chat = []; renderChat(); broadcast(); phase = 'idle'; $('reset').classList.add('hidden'); if (cur) delete cur._laterUsed;
   $('reply').value = ''; $('trace').innerHTML = ''; $('traceBox').classList.add('hidden'); $('laterWrap').classList.add('hidden'); $('laterBox').classList.add('hidden');
   $('scoreCard').classList.add('locked'); $('status').textContent = "Waiting for the technician's message.";
   document.querySelectorAll('#rubric input').forEach((i) => { i.checked = false; i.disabled = true; });
@@ -233,7 +233,7 @@ function flow(k) {
   const order = ['msg', 'draft', 'decide', 'score']; const at = order.indexOf(k);
   document.querySelectorAll('#flow li').forEach((li) => { const i = order.indexOf(li.dataset.k); li.className = i < at ? 'done' : i === at ? 'now' : ''; });
 }
-function say(role, text) { chat.push({ role, text }); renderChat(); broadcast(); }
+function say(role, text) { chat.push({ role, text }); renderChat(); broadcast(); $('reset').classList.remove('hidden'); }
 function grow() { const r = $('reply'); r.style.height = 'auto'; r.style.height = Math.max(140, r.scrollHeight + 4) + 'px'; }
 function mode() { $('mode').textContent = override ? 'Overriding the draft' : edited ? 'Editing the draft' : 'Sending the draft as is'; }
 
