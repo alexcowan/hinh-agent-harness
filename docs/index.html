@@ -49,20 +49,22 @@
 <header><h1 id="h1">Try it: Wizard of Oz with an agent harness</h1><span class="meta wiz"><a style="color:#fff" href="https://github.com/alexcowan/hinh-agent-harness">The code on GitHub</a></span></header>
 <main>
   <div class="banner wiz">
-    <b>What this is.</b> HVAC in a Hurry's next-steps agent: a technician hands off the next steps of a repair and gets on the road.
-    A Wizard-of-Oz session has two people on two screens:
+    <b>What this is.</b> A harness for HVAC in a Hurry's next-steps agent. It has two roles:
     <div class="roles">
-      <div class="role"><b>The tester</b> plays the technician. They see only a chat (panel 2) and think they're talking to the agent.</div>
-      <div class="role"><b>You, the wizard</b>, see the harness's draft and what it did (panel 3), and decide what the tester actually gets.</div>
+      <div class="role"><b>The technician</b> (Trent) hands off the next steps of a repair from his phone and gets back on the road. Whoever plays him sees only the chat and a role card.</div>
+      <div class="role"><b>The agent</b> drafts a reply and acts in HinH's systems. In a Wizard-of-Oz test, a person (the wizard) sees each draft and what it did, and decides what the technician actually gets.</div>
     </div>
-    <p style="margin:10px 0 0">Here you can play both parts yourself, or <a href="#" id="openTester">open the tester's screen in a second window</a> to see the split.
-    <b>The drafts on this page are recorded, and some are wrong on purpose.</b> Your job is to catch them. In your own copy, an AI writes the drafts live and a classmate is the tester.</p>
+    <p style="margin:10px 0 4px">Its purpose is to let you test and train the AI on example cases. Two ways to use it:</p>
+    <ul style="margin:0 0 0 18px; padding:0">
+      <li><b>Play both parts yourself.</b> Pick a case, then type as Trent in the phone (or send the opening line). Quick for walking through the golden and adversarial cases.</li>
+      <li><b>Freeform, with a human tester.</b> <a href="#" id="openTester">Open the tester's screen in a second window</a> and hand it to someone. They improvise as Trent from the role card; you play the wizard. In your own copy, an AI drafts live and the tester can be on their own device.</li>
+    </ul>
+    <p style="margin:8px 0 0"><b>The drafts on this page are recorded, and some are wrong on purpose.</b> Your job is to catch them.</p>
   </div>
 
   <div class="card wiz">
     <h2><span class="step">1</span>Pick a case</h2>
     <select id="case"></select>
-    <div id="brief"></div>
     <div class="row"><button id="play">Send the opening line for me</button><button class="secondary" id="reset">Start over</button></div>
   </div>
 
@@ -70,6 +72,7 @@
     <div id="testerRole" class="hidden"></div>
     <div class="card phonecard" id="phoneCard">
       <h2 class="wiz"><span class="step">2</span>The tester's screen</h2>
+      <div id="brief" class="wiz" style="margin-bottom:14px"></div>
       <div class="phone">
         <div class="bar"><div class="avatar">H</div><div class="who"><b>HinH Assistant</b><span>Field ops · replies in a minute</span></div></div>
         <div class="chat" id="chat"></div>
@@ -161,7 +164,7 @@ if (isTester) {
     e.preventDefault(); const t = $('text').value.trim(); if (!t || phase !== 'idle') return;
     $('text').value = ''; technicianSays(t);
   });
-  $('openTester').addEventListener('click', (e) => { e.preventDefault(); window.open('?view=tester', 'tester', 'width=520,height=760'); });
+  $('openTester').addEventListener('click', (e) => { e.preventDefault(); window.open('?view=tester', 'tester', 'width=780,height=760'); });
   if (bc) bc.onmessage = (e) => {
     if (e.data.type === 'hello') broadcast();
     if (e.data.type === 'user' && phase === 'idle') technicianSays(e.data.text);
