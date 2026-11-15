@@ -18,12 +18,15 @@ yourselves, as Given-When-Then scenarios; 2–3 golden and 2–3 adversarial is
 enough to start. An AI that writes them ends up grading its own idea of what you
 meant.
 
-Then paste this into your AI coding assistant, filling in the brackets:
+Your AI needs internet access to read this repo. In Codex, choose **Full access**
+in the permissions selector under the message box. Then paste this into your AI
+coding assistant, filling in the brackets:
 
 > Here is a working example of a test harness for an agentic UX:
 > https://github.com/alexcowan/hinh-agent-harness. Read its AGENTS.md, then help
 > us build one like it for our agent, one level at a time. Ask us what you need
-> to know about our setup.
+> to know about our setup. If you can't reach that link, stop and tell us how
+> to give you internet access; don't continue without reading AGENTS.md.
 > Our user story: [paste your user story]
 > Our design brief: [link to your design brief]
 > Our rubric: [paste your rubric]
