@@ -20,7 +20,7 @@ anything like it), regenerate these files so they match it exactly:
 | `fixtures/<name>.json` | Made-up but realistic test data covering "What the agent can see and do". Exactly one .json file in `fixtures/`; name it after the student's product. |
 | `harness/tools.json` | One tool per thing the agent can look up or do, each with a plain one-sentence description and JSON-schema parameters. |
 | `src/tools.js` | An implementation for every tool in `tools.json`, running against the fixtures. Every action must check `permissions.json` and refuse with a clear "Not permitted: ..." message, exactly as the HinH version does. Never move a permission rule into the instructions only. |
-| `cases/<ID>.json` | One file per case: `id`, `type` (golden, adversarial, intervention), `title`, `trigger` (what the user says, word for word), `visible_context`, `good`, `tester_brief` (what to tell a classmate playing the user), `fixtures` (only the changes to the base test data that make "What's true" true), and, only if the case has a **Later** line, `later` (that line, starting with how much time passed in brackets, e.g. "[About three hours later] Lena Park approves the part."). Records the agent creates should carry an id field (`id` or `something_id`) so a Later event can change them. |
+| `cases/<ID>.json` | One file per case: `id`, `type` (golden, adversarial, intervention), `title`, `trigger` (the **When**: what the user says, word for word), `visible_context`, `good` (the **Then**), `tester_brief` (what to tell a classmate playing the user), `fixtures` (only the changes to the base test data that make the case's **Given** true), and, only if the case has a **Later** line, `later` (that line, starting with how much time passed in brackets, e.g. "[About three hours later] Lena Park approves the part."). Records the agent creates should carry an id field (`id` or `something_id`) so a Later event can change them. |
 | `tests/` | `tools.test.js`: tests that each permission rule is enforced and each case's fixtures load. `harness.test.js` and `tests/scripts/`: rewrite for one of the student's golden cases, or delete them. |
 
 When `my-agent.md` describes the student's own product, remove everything about the HinH example: delete `fixtures/hinh.json` and the HinH case files, and leave no HinH names (HinH, Trent, Ridgeline, and so on) anywhere you generate.
@@ -29,7 +29,13 @@ Then run `npm run check`. It runs the tests and looks for HinH material left ove
 couldn't represent in the test data, if any, instead of quietly dropping them.
 
 If `my-agent.md` is missing something you need (for example, a case with no
-"What's true"), ask the student one plain question rather than inventing it.
+**Given**), ask the student one plain question rather than inventing it.
+
+The cases are the student's to write. Don't write new cases for them, even if
+asked to "fill in" a section; instead, help them write their own: fix the
+format, and point out any case that is vague, untestable, or a near-copy of
+another. If they insist on a draft, mark every case you wrote with
+"(AI draft: replace with your own)" so check output and reviewers can see it.
 
 Do not change `src/harness.js`, `src/server.js`, `src/eval.js`, `src/grader.js`,
 or `public/` unless the student asks.

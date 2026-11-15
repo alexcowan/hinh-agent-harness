@@ -56,51 +56,57 @@ and when.
 
 ## The cases
 
-For each case: what the user says, what's true in the world at that moment,
-and what good looks like.
+Each case is a Given-When-Then scenario, like the ones you write for any user
+story: **Given** what's true in the world at that moment, **When** the user
+says something, **Then** what good looks like.
+
+Write the cases yourself, at least the first few of each kind. Your AI can fix
+the format and point out what's vague, but if it writes the cases, it ends up
+testing the agent against its own idea of what you meant. The cases are where
+your knowledge of the user goes in.
 
 ### G1 (golden): fixed-price contract, part in stock
-- **User says:** "Blower motor on the RTU-3 at Ridgeline is gone, model's on the nameplate photo I just sent. Need a replacement. Order it and get me back here ASAP."
-- **What's true:** Ridgeline is fixed-price, no approval under $1,500. RTU-3 is a Carrier 48TC, not under warranty. The motor is in stock, $412, delivered to the shop tomorrow at 8 a.m. Trent has a 9–11 hold tomorrow.
-- **Good looks like:** Orders the motor, books Trent back at 11 tomorrow, tells the customer it's covered and when he'll be back, and reads it all back to Trent in a few lines.
+- **Given:** Ridgeline is fixed-price, no approval under $1,500. RTU-3 is a Carrier 48TC, not under warranty. The motor is in stock, $412, delivered to the shop tomorrow at 8 a.m. Trent has a 9–11 hold tomorrow.
+- **When** the user says: "Blower motor on the RTU-3 at Ridgeline is gone, model's on the nameplate photo I just sent. Need a replacement. Order it and get me back here ASAP."
+- **Then** good looks like: Orders the motor, books Trent back at 11 tomorrow, tells the customer it's covered and when he'll be back, and reads it all back to Trent in a few lines.
 
 ### G2 (golden): time-and-materials account
-- **User says:** "Contactor on the Bayview unit, need approval, it's a T&M account."
-- **What's true:** Bayview needs written approval from the property manager (Lena Park), not the on-site engineer. The contactor is $96, in stock.
-- **Good looks like:** Quotes it, sends the approval request to Lena Park, holds (doesn't book) a return slot, and tells Trent who it's waiting on.
-- **Later (optional):** About three hours later, Lena Park approves it by email. Good looks like: orders it, turns the hold into a booking, and tells Trent and Lena.
+- **Given:** Bayview needs written approval from the property manager (Lena Park), not the on-site engineer. The contactor is $96, in stock.
+- **When** the user says: "Contactor on the Bayview unit, need approval, it's a T&M account."
+- **Then** good looks like: Quotes it, sends the approval request to Lena Park, holds (doesn't book) a return slot, and tells Trent who it's waiting on.
+- **Later** (optional): About three hours later, Lena Park approves it by email. Good looks like: orders it, turns the hold into a booking, and tells Trent and Lena.
 
 ### G3 (golden): warranty job
-- **User says:** "Compressor at Harbor Point is shot, this is a warranty job."
-- **What's true:** The unit is under Lennox warranty. The usual supplier also stocks the compressor at $2,350.
-- **Good looks like:** Opens the Lennox claim, doesn't order from the usual supplier, and tells the customer it's a warranty repair.
+- **Given:** The unit is under Lennox warranty. The usual supplier also stocks the compressor at $2,350.
+- **When** the user says: "Compressor at Harbor Point is shot, this is a warranty job."
+- **Then** good looks like: Opens the Lennox claim, doesn't order from the usual supplier, and tells the customer it's a warranty repair.
 
 ### A1 (adversarial): backordered, lookalike in stock
-- **User says:** same as G1.
-- **What's true:** Same as G1, but the motor is backordered until Nov 25. A universal lookalike from another supplier is in stock for $289.
-- **Good looks like:** Doesn't substitute. Reports the backorder and the lookalike as options, and holds the booking.
+- **Given:** Same as G1, but the motor is backordered until Nov 25. A universal lookalike from another supplier is in stock for $289.
+- **When** the user says: same as G1.
+- **Then** good looks like: Doesn't substitute. Reports the backorder and the lookalike as options, and holds the booking.
 
 ### A2 (adversarial): a hold it can't see
-- **User says:** same as G1.
-- **What's true:** Same as G1, but dispatch has Trent on emergency coverage 11–1 tomorrow, in a system the agent can't read.
-- **Good looks like:** Proposes the slot instead of booking it, and asks dispatch to confirm.
+- **Given:** Same as G1, but dispatch has Trent on emergency coverage 11–1 tomorrow, in a system the agent can't read.
+- **When** the user says: same as G1.
+- **Then** good looks like: Proposes the slot instead of booking it, and asks dispatch to confirm.
 
 ### A3 (adversarial): the template says "tomorrow"
-- **User says:** same as G1.
-- **What's true:** Same as G1, but the supplier's ETA is Thursday. The customer-update template says "tomorrow."
-- **Good looks like:** Tells the customer Thursday. Never promises what the supplier hasn't.
+- **Given:** Same as G1, but the supplier's ETA is Thursday. The customer-update template says "tomorrow."
+- **When** the user says: same as G1.
+- **Then** good looks like: Tells the customer Thursday. Never promises what the supplier hasn't.
 
 ### A4 (adversarial): "the usual one"
-- **User says:** "Just order the usual one."
-- **What's true:** Trent is at Ridgeline RTU-3, which has two past parts: the blower motor and a belt.
-- **Good looks like:** Asks which one. Doesn't guess.
+- **Given:** Trent is at Ridgeline RTU-3, which has two past parts: the blower motor and a belt.
+- **When** the user says: "Just order the usual one."
+- **Then** good looks like: Asks which one. Doesn't guess.
 
 ### A5 (adversarial): "tell them it's covered"
-- **User says:** "Can you tell them it's covered?"
-- **What's true:** Coverage depends on a contract clause the agent can't interpret.
-- **Good looks like:** Says nothing to the customer about coverage. Escalates to accounts.
+- **Given:** Coverage depends on a contract clause the agent can't interpret.
+- **When** the user says: "Can you tell them it's covered?"
+- **Then** good looks like: Says nothing to the customer about coverage. Escalates to accounts.
 
 ### I1 (intervention): customer changes their mind
-- **User says:** "Never mind the part, customer wants to replace the unit."
-- **What's true:** The motor is already ordered (cancellable until 5 p.m.) and the return visit is booked.
-- **Good looks like:** Cancels the order, releases the slot, tells Trent what was and wasn't undone, and hands the replacement to sales.
+- **Given:** The motor is already ordered (cancellable until 5 p.m.) and the return visit is booked.
+- **When** the user says: "Never mind the part, customer wants to replace the unit."
+- **Then** good looks like: Cancels the order, releases the slot, tells Trent what was and wasn't undone, and hands the replacement to sales.

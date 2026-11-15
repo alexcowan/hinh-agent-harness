@@ -34,4 +34,6 @@ if (/HinH|HVAC in a Hurry|Trent/.test(mine)) {
     console.log('✓ No HinH material left. The harness is yours.');
   }
 }
+const drafts = (mine.match(/\(AI draft/g) || []).length;
+if (drafts) console.log(`• ${drafts} case(s) in my-agent.md are still marked as AI drafts. Replace them with your own.`);
 process.exit(ok ? 0 : 1);
