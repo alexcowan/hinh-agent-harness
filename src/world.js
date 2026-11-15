@@ -1,5 +1,5 @@
 // Loads the harness files, the fixtures, and the cases from disk.
-// A "world" is one copy of the fixtures that a run (or a Wizard of Oz session)
+// A "world" is one copy of the fixtures that a run (or a test-page session)
 // can change without touching the files.
 
 import fs from 'node:fs';

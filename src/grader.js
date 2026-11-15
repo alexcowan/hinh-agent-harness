@@ -1,8 +1,8 @@
 // The AI grader: scores one run against each row of the rubric.
 // Check it against your own judgment before you trust it (see README).
 
-// conversation (optional): the whole session as text, for scoring a Wizard of
-// Oz session rather than a single run. Otherwise `reply` is the agent's reply.
+// conversation (optional): the whole session as text, for scoring a test-page
+// session rather than a single run. Otherwise `reply` is the agent's reply.
 export async function gradeRun({ ai, rubric, caseDef, reply, trace, conversation }) {
   const system = 'You grade runs of an AI agent against a rubric. Be strict and literal. ' +
     'Judge only what the agent actually did (its tool calls) and said (its reply). ' +

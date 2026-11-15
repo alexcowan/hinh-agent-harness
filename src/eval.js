@@ -34,7 +34,7 @@ if (ai.name === 'none') {
   const file = path.join(ROOT, 'results', `${stamp}-hand-grading.md`);
   fs.writeFileSync(file, handSheet(cases, harness.rubric));
   console.log(`No AI key set, so no runs. Wrote a hand-grading sheet: ${path.relative(ROOT, file)}`);
-  console.log('Run each case by hand (or in the Wizard of Oz page) and fill it in.');
+  console.log('Run each case by hand (or on the test page) and fill it in.');
   process.exit(0);
 }
 

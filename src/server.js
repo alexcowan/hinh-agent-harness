@@ -58,7 +58,7 @@ async function draftReply(s) {
 async function proposeLater(s, hint) {
   const { caseDef } = s;
   const world = JSON.stringify(s.world, (k, v) => (k === 'actions' ? undefined : v)).slice(0, 8000);
-  const system = 'You play the rest of the world in a Wizard-of-Oz test of an AI agent. Time has passed since the last message. ' +
+  const system = 'You play the rest of the world in a test of an AI agent. Time has passed since the last message. ' +
     'Write the ONE thing that most plausibly happens next because of what the agent did (an approval comes back, a supplier confirms, a customer replies), ' +
     'as a short line starting with how much time passed in brackets, e.g. "[About 3 hours later] Lena Park approves the $96 part by email." ' +
     'If it changes a record in the world, say how in updates, using that record\'s id. Answer with JSON only.';
