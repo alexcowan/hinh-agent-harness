@@ -46,6 +46,21 @@
   .phone .composer input { border-radius:20px; padding:8px 14px; margin:0; }
   .phone .composer button { border-radius:50%; width:38px; height:38px; padding:0; flex:none; font-size:16px; }
   .phonecard h2 { justify-content:center; }
+  .phone { height: 480px; }
+  body.tester .phone { height: 600px; }
+  .compact { font-size:13px; background:#fffdf3; border:1px dashed #b9a46a; border-radius:4px; padding:8px 10px; margin-bottom:12px; color:#3b3524; }
+  .compact b { font: 700 10px/1 ui-monospace, Menlo, monospace; letter-spacing:.1em; text-transform:uppercase; color:#8a7536; margin-right:6px; }
+  .compact a { margin-left:6px; font-size:12px; }
+  .hint { font-size:12px; color:#6b4a1e; background:#fff3e0; padding:6px 10px; text-align:center; }
+  .flow { list-style:none; margin:4px 0 14px; padding:0; font-size:14px; }
+  .flow li { padding:6px 10px; border-left:3px solid #e3e6eb; color:#7a8290; margin-bottom:4px; }
+  .flow li.now { border-left-color:#e57200; color:#232b45; background:#fff8ef; font-weight:600; }
+  .flow li.done { color:#2e7d32; }
+  .flow li.done::before { content:'✓ '; }
+  textarea:disabled { background:#f7f8fa; color:#9aa1ad; cursor:not-allowed; }
+  .card.locked { opacity:.55; }
+  .card.locked .lockmsg { display:block; }
+  .lockmsg { display:none; font-size:14px; color:#4a5563; margin:0 0 6px; }
 </style>
 </head>
 <body>
@@ -59,7 +74,7 @@
     </div>
     <p style="margin:10px 0 4px">Its purpose is to let you test and train the AI on example cases. Two ways to use it:</p>
     <ul style="margin:0 0 0 18px; padding:0">
-      <li><b>Play both parts yourself.</b> Pick a case, then type as Trent in the phone (or send the opening line). Quick for walking through the golden and adversarial cases.</li>
+      <li><b>Play both parts yourself.</b> Pick a case, then send Trent's opening line from the phone. Quick for walking through the golden and adversarial cases.</li>
       <li><b>Freeform, with a human tester.</b> <a href="#" id="openTester">Open the tester's screen in a second window</a> and hand it to someone. They improvise as Trent from the role card; you play the wizard. In your own copy, an AI drafts live and the tester can be on their own device.</li>
     </ul>
     <p style="margin:8px 0 0"><b>The drafts on this page are recorded, and some are wrong on purpose.</b> Your job is to catch them.</p>
@@ -68,7 +83,7 @@
   <div class="card wiz">
     <h2><span class="step">1</span>Pick a case</h2>
     <select id="case"></select>
-    <div class="row"><button id="play">Send the opening line for me</button><button class="secondary" id="reset">Start over</button></div>
+    <div class="row"><button class="secondary" id="reset">Start over</button></div>
   </div>
 
   <div class="cols">
@@ -79,6 +94,7 @@
       <div class="phone">
         <div class="bar"><div class="avatar">H</div><div class="who"><b>HinH Assistant</b><span>Field ops · replies in a minute</span></div><div class="me" title="Signed in as Trent"><div class="face">T</div>Trent</div></div>
         <div class="chat" id="chat"></div>
+        <div class="hint wiz" id="hint">The opening line is filled in. Edit it if you like, then press ➤.</div>
         <form class="composer" id="composer">
           <input type="text" id="text" placeholder="Message" autocomplete="off" aria-label="Message">
           <button id="tsend" aria-label="Send">➤</button>
@@ -87,8 +103,14 @@
     </div>
     <div class="card wiz">
       <h2><span class="step">3</span>Your screen, as the wizard</h2>
+      <ol class="flow" id="flow">
+        <li data-k="msg">The technician sends a message (from the phone)</li>
+        <li data-k="draft">The harness drafts a reply here, with what it did</li>
+        <li data-k="decide">You send it as is, edit it, or write your own</li>
+        <li data-k="score">You score it against the rubric (step 4)</li>
+      </ol>
       <p class="muted" id="status">Waiting for the technician's message.</p>
-      <textarea id="reply" placeholder="The harness's draft will appear here"></textarea>
+      <textarea id="reply" placeholder="The harness's draft will appear here once the technician writes" disabled></textarea>
       <div class="row">
         <button id="send" disabled>Send</button>
         <button class="secondary" id="own" disabled>Write my own instead</button>
@@ -110,8 +132,9 @@
     </div>
   </div>
 
-  <div class="card hidden wiz" id="scoreCard">
+  <div class="card wiz locked" id="scoreCard">
     <h2><span class="step">4</span>Score it against the rubric</h2>
+    <p class="lockmsg">Scoring opens once you've sent a reply.</p>
     <div class="good" id="good"></div>
     <p class="muted">The AI has scored it first. Check each row and change any you disagree with.</p>
     <table class="rubric" id="rubric"></table>
@@ -138,6 +161,11 @@ function roleCard(c, forWizard) {
   return `<div class="rolecard"><div class="tag"><span>${forWizard ? "The tester's role card" : 'Your role'}</span><span>${forWizard ? '' : 'only you see this'}</span></div>` +
     `<dl>${rows}</dl>` + (r.secret ? `<div class="secret">${esc(r.secret)}</div>` : '') +
     `<div class="tip">${forWizard ? `Opening line, if they need one: “${esc(c.trigger)}”` : 'Type like Trent would: short, on a phone, between jobs.'}</div></div>`;
+}
+function compactCard(c) {
+  const r = c.role || {};
+  const bits = ['Trent', r.where, r.problem, r.want].filter(Boolean).map(esc).join(' · ');
+  return `<div class="compact"><b>Tester's role</b>${bits}<a href="#" id="fullCard">show full card</a></div>`;
 }
 function renderChat() {
   $('chat').innerHTML = '';
@@ -188,14 +216,25 @@ if (isTester) {
 
 function pick() {
   cur = data.cases.find((c) => c.id === $('case').value) || data.cases[0];
-  $('brief').innerHTML = roleCard(cur, true);
+  $('brief').innerHTML = compactCard(cur);
+  $('fullCard').addEventListener('click', (e) => { e.preventDefault(); $('brief').innerHTML = roleCard(cur, true); });
   reset();
 }
 function reset() {
   chat = []; renderChat(); broadcast(); phase = 'idle'; if (cur) delete cur._laterUsed;
   $('reply').value = ''; $('trace').innerHTML = ''; $('traceBox').classList.add('hidden'); $('laterWrap').classList.add('hidden'); $('laterBox').classList.add('hidden');
-  $('scoreCard').classList.add('hidden'); $('status').textContent = "Waiting for the technician's message.";
-  $('send').disabled = true; $('own').disabled = true; $('play').disabled = false; override = false; edited = false; $('mode').textContent = '';
+  $('scoreCard').classList.add('locked'); $('status').textContent = "Waiting for the technician's message.";
+  document.querySelectorAll('#rubric input').forEach((i) => { i.checked = false; i.disabled = true; });
+  document.querySelectorAll('#rubric .aiwhy').forEach((w) => { w.textContent = ''; });
+  $('good').innerHTML = ''; $('verdict').textContent = '';
+  $('reply').disabled = true;
+  $('send').disabled = true; $('own').disabled = true; override = false; edited = false; $('mode').textContent = '';
+  if (!isTester && cur) { $('text').value = cur.trigger; $('hint').classList.remove('hidden'); }
+  flow('msg');
+}
+function flow(k) {
+  const order = ['msg', 'draft', 'decide', 'score']; const at = order.indexOf(k);
+  document.querySelectorAll('#flow li').forEach((li) => { const i = order.indexOf(li.dataset.k); li.className = i < at ? 'done' : i === at ? 'now' : ''; });
 }
 function say(role, text) { chat.push({ role, text }); renderChat(); broadcast(); }
 function grow() { const r = $('reply'); r.style.height = 'auto'; r.style.height = Math.max(140, r.scrollHeight + 4) + 'px'; }
@@ -214,22 +253,23 @@ function showDraft(text, trace) {
   $('blockedNote').classList.toggle('hidden', !trace.some((t) => !t.ok));
   $('traceBox').classList.remove('hidden');
   $('status').textContent = 'Draft ready. Is it right? Send it as is, edit it, or write your own.';
-  $('send').disabled = false; $('own').disabled = false; mode();
+  $('send').disabled = false; $('own').disabled = false; $('reply').disabled = false; mode();
+  flow('decide');
 }
 
 function technicianSays(text) {
-  phase = 'drafting'; $('play').disabled = true; say('user', text); $('status').textContent = 'The harness is drafting a reply…';
+  phase = 'drafting'; say('user', text); $('status').textContent = 'The harness is drafting a reply…';
+  $('hint').classList.add('hidden'); $('text').value = ''; flow('draft');
   setTimeout(() => showDraft(cur.draft, cur.trace), 1200);
 }
 
 $('case').addEventListener('change', pick);
 $('reset').addEventListener('click', reset);
-$('play').addEventListener('click', () => technicianSays(cur.trigger));
 $('reply').addEventListener('input', () => { edited = true; grow(); mode(); });
 $('own').addEventListener('click', () => { override = true; edited = true; $('reply').value = ''; $('reply').focus(); mode(); });
 $('send').addEventListener('click', () => {
   const t = $('reply').value.trim(); if (!t) return;
-  say('agent', t); $('send').disabled = true; $('own').disabled = true; phase = 'sent';
+  say('agent', t); $('send').disabled = true; $('own').disabled = true; $('reply').disabled = true; phase = 'sent'; flow('score'); $('mode').textContent = '';
   $('status').textContent = override ? 'You overrode the draft: that is a candidate new case.' : edited ? 'You edited the draft: that is a candidate new case.' : 'You sent the draft as is.';
   if (cur.later && !cur._laterUsed) { $('laterWrap').classList.remove('hidden'); $('status').textContent += ' This case continues: try Let time pass.'; }
   showScore();
@@ -238,7 +278,7 @@ $('laterBtn').addEventListener('click', () => { $('laterText').value = cur.later
 $('laterPost').addEventListener('click', () => {
   const t = $('laterText').value.trim(); if (!t) return;
   cur._laterUsed = true; $('laterWrap').classList.add('hidden'); $('laterBox').classList.add('hidden');
-  say('event', t); $('status').textContent = 'The harness is drafting what to do now…';
+  say('event', t); $('status').textContent = 'The harness is drafting what to do now…'; flow('draft');
   setTimeout(() => showDraft(cur.later.draft, cur.later.trace), 1200);
 });
 
@@ -259,7 +299,8 @@ function showScore() {
   });
   summary();
   $('good').innerHTML = '<b>Then</b>, for this case, good looks like: ' + cur.good;
-  $('scoreCard').classList.remove('hidden');
+  document.querySelectorAll('#rubric input').forEach((i) => { i.disabled = false; });
+  $('scoreCard').classList.remove('locked');
 }
 </script>
 </body>
