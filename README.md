@@ -30,6 +30,8 @@ web pointed at your repo, which opens a pull request for you to review and merge
 
 On GitHub: **Code → Codespaces → Create codespace on main**. It opens in your
 browser with everything installed, and the Wizard of Oz page starts on its own.
+If VS Code asks whether you trust the authors of the files, click **Trust Folder &
+Continue**.
 Your free GitHub account includes enough hours for this.
 
 Codex is installed in the Codespace. In the terminal at the bottom, type `codex`
@@ -46,7 +48,9 @@ for example:
    it gives you.
 2. Enter your tester's **initials** (not their name), pick a case if they're
    playing one, and read them the brief.
-3. Send them the tester link. Each time they write, the harness drafts a reply
+3. Send them the tester link. The first time they open it, GitHub shows a
+   warning page about a development port; they click **Continue**.
+   Each time they write, the harness drafts a reply
    and shows you what it did behind the scenes. **Send** it as is, edit it, or
    click **Write my own instead**.
 4. At the end, score the session against your rubric and click **End session**.
