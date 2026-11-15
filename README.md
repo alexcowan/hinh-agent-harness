@@ -2,13 +2,17 @@
 
 **Try it in your browser first:** https://alexcowan.github.io/hinh-agent-harness/
 
+**AI assistants:** read `AGENTS.md` before anything else. It says how to help a
+student build their own, one level at a time.
+
 A working example of a harness for an agentic UX, built on HVAC in a Hurry (HinH):
 a field technician hands the next steps of a repair to an agent and gets on the
 road. Use it two ways:
 
 - **See one working.** Open it as is and run the HinH cases.
-- **Make your own.** Click **Use this template** (top right), describe your agent
-  in `my-agent.md`, and let your AI build the rest.
+- **Make your own.** Point your AI coding assistant at this repo with your user
+  story, rubric, and cases, and ask it to build something like this for your
+  agent. It will work through it with you.
 
 Your job is the user story, the rubric, and the cases. Your AI's job is
 everything else: the code, the test data, and the commands. The instructions it

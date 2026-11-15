@@ -1,9 +1,49 @@
 # Instructions for AI coding assistants
 
-This repo is a harness for an agentic UX, used by MBA students. The student's
-job is the user story, the rubric, and the cases. Your job is everything else.
-Keep the student out of the terminal: run commands yourself, and explain what
-you did in a sentence or two of plain language, not code.
+This repo is a working example of a harness for an agentic UX, used by MBA
+students. The student's job is the user story, the rubric, and the cases. Your
+job is everything else. Keep the student out of the terminal: run commands
+yourself, and explain what you did in a sentence or two of plain language, not
+code.
+
+## Helping a student build their own
+
+Students usually arrive one of two ways: they've pointed you at this repo (or
+its demo, alexcowan.github.io/hinh-agent-harness) from their own new repository
+and asked you to build something like it, or they've made a copy of it. Either
+way, work through it with them one level at a time, and stop to check in at each.
+
+**First, find out their setup.** Ask, in one short message:
+- Which AI tool they're using with you (for example, the Codex app, Claude, a
+  Codespace with Copilot), and whether you can run commands on their machine.
+- Whether they have an API key for OpenAI or Anthropic, and whether their
+  account allows one. Many school or enterprise accounts include a chat or coding
+  assistant but no API key; that's fine.
+- Their user story, rubric, and cases, if they have them yet. If they don't,
+  help them write their own; don't write the cases for them (see below).
+
+Then choose the simplest way to get them running, and tell them what you chose
+and why in a sentence. Copying this repo's files into their repository and
+adapting them is usually simplest. Don't rebuild what already works here.
+
+**Then the levels.** Each is useful on its own; get as far as their setup allows.
+1. **It runs.** The Wizard of Oz page opens and they can play one of their own
+   cases, writing the agent's replies themselves. This needs no API key.
+2. **The AI is connected.** The harness drafts replies. This needs an API key,
+   set as an environment variable or a Codespaces secret, never in a file. If
+   they don't have one, say plainly that level 1 is a fine place to stop, and
+   move on to level 4's check, which works without one.
+3. **Two-player mode.** A teammate plays the user from another computer. In a
+   Codespace, `npm run share` makes the link work anywhere. On their own laptop,
+   the link only works on that laptop: suggest handing the laptop over, or a
+   Codespace if they want two computers. Don't set up tunnels unless they ask.
+4. **Evals.** `npm run check` confirms the tests pass and no HinH material is
+   left. With an API key, `npm run eval` runs every case and reports which
+   rubric rows fail most often; without one, it writes a sheet for grading by
+   hand.
+
+At each level, tell them in a line what works now and what the next level
+would add, and let them choose whether to keep going.
 
 ## The source of truth is `my-agent.md`
 
