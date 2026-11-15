@@ -5,7 +5,8 @@ header h1 { font-size: 18px; margin: 0; font-weight: 600; }
 header .meta { font-size: 13px; opacity: .85; }
 main { padding: 20px 24px; max-width: 1200px; margin: 0 auto; }
 .card { background: #fff; border: 1px solid #dde1e7; border-radius: 8px; padding: 16px 18px; margin-bottom: 16px; }
-.card h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .04em; color: #4a5563; }
+.card h2 { font-size: 20px; font-weight: 700; margin: 0 0 14px; color: #232b45; display: flex; align-items: center; gap: 10px; letter-spacing: -.01em; }
+.card h2 .step { flex: none; width: 28px; height: 28px; border-radius: 50%; background: #e57200; color: #fff; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; }
 label { font-size: 14px; font-weight: 600; display: block; margin: 8px 0 4px; }
 input[type=text], select, textarea { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid #c4cad3; border-radius: 6px; background: #fff; }
 textarea { min-height: 140px; resize: vertical; }

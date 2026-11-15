@@ -11,7 +11,7 @@
 <main>
 
   <div class="card" id="setup">
-    <h2>Start a session</h2>
+    <h2><span class="step">1</span>Start a session</h2>
     <label for="initials">Subject's initials</label>
     <input type="text" id="initials" maxlength="4" placeholder="e.g. JS" style="max-width:120px">
     <label for="case">Case to play (optional)</label>
@@ -25,18 +25,18 @@
 
   <div id="live" class="hidden">
     <div class="card">
-      <h2>Send this link to the tester</h2>
+      <h2><span class="step">2</span>Send this link to the tester</h2>
       <div class="row"><span class="link" id="userLink"></span><button class="secondary" id="copy">Copy</button></div>
       <p class="muted">Logging to <b id="logFile"></b>. Commit it to your repo when you're done.</p>
     </div>
 
     <div class="cols">
       <div class="card">
-        <h2>Conversation (what the tester sees)</h2>
+        <h2><span class="step">3</span>Conversation (what the tester sees)</h2>
         <div class="chat" id="chat"></div>
       </div>
       <div class="card">
-        <h2>Your reply</h2>
+        <h2><span class="step">4</span>Your reply</h2>
         <p class="muted" id="draftStatus">Waiting for the tester's first message.</p>
         <textarea id="reply" placeholder="Write the agent's reply"></textarea>
         <div class="row">
@@ -62,7 +62,7 @@
     </div>
 
     <div class="card">
-      <h2>Score the session against the rubric</h2>
+      <h2><span class="step">5</span>Score the session against the rubric</h2>
       <div class="row" style="margin-top:0"><button class="secondary" id="aiScore">Have the AI score it first</button><span class="muted" id="aiScoreMsg">The AI fills in each row with a reason. You agree or change it.</span></div>
       <table class="rubric" id="rubric"></table>
       <label for="note">Note</label>

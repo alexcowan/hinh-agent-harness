@@ -42,7 +42,7 @@
   .phone .composer { display:flex; gap:8px; padding:10px; background:#fff; border-top:1px solid #e3e6eb; margin:0; }
   .phone .composer input { border-radius:20px; padding:8px 14px; margin:0; }
   .phone .composer button { border-radius:50%; width:38px; height:38px; padding:0; flex:none; font-size:16px; }
-  .phonecard h2 { text-align:center; }
+  .phonecard h2 { justify-content:center; }
 </style>
 </head>
 <body>
@@ -60,7 +60,7 @@
   </div>
 
   <div class="card wiz">
-    <h2>1. Pick a case</h2>
+    <h2><span class="step">1</span>Pick a case</h2>
     <select id="case"></select>
     <div id="brief"></div>
     <div class="row"><button id="play">Send the opening line for me</button><button class="secondary" id="reset">Start over</button></div>
@@ -69,7 +69,7 @@
   <div class="cols">
     <div id="testerRole" class="hidden"></div>
     <div class="card phonecard" id="phoneCard">
-      <h2 class="wiz">2. The tester's screen</h2>
+      <h2 class="wiz"><span class="step">2</span>The tester's screen</h2>
       <div class="phone">
         <div class="bar"><div class="avatar">H</div><div class="who"><b>HinH Assistant</b><span>Field ops · replies in a minute</span></div></div>
         <div class="chat" id="chat"></div>
@@ -80,7 +80,7 @@
       </div>
     </div>
     <div class="card wiz">
-      <h2>3. Your screen, as the wizard</h2>
+      <h2><span class="step">3</span>Your screen, as the wizard</h2>
       <p class="muted" id="status">Waiting for the technician's message.</p>
       <textarea id="reply" placeholder="The harness's draft will appear here"></textarea>
       <div class="row">
@@ -105,7 +105,7 @@
   </div>
 
   <div class="card hidden wiz" id="scoreCard">
-    <h2>4. Score it against the rubric</h2>
+    <h2><span class="step">4</span>Score it against the rubric</h2>
     <div class="good" id="good"></div>
     <p class="muted">The AI has scored it first. Check each row and change any you disagree with.</p>
     <table class="rubric" id="rubric"></table>
