@@ -37,8 +37,14 @@
       </div>
       <div class="card">
         <h2><span class="step">4</span>Your reply</h2>
+        <ol class="flow" id="flow">
+          <li data-k="msg">The tester sends a message from their screen</li>
+          <li data-k="draft">The harness drafts a reply here, with what it did</li>
+          <li data-k="decide">You send it as is, edit it, or write your own</li>
+          <li data-k="score">When the session is done, score it against the rubric (step 5)</li>
+        </ol>
         <p class="muted" id="draftStatus">Waiting for the tester's first message.</p>
-        <textarea id="reply" placeholder="Write the agent's reply"></textarea>
+        <textarea id="reply" placeholder="The harness's draft will appear here once the tester writes" disabled></textarea>
         <div class="row">
           <button id="send">Send</button>
           <button class="secondary" id="own">Write my own instead</button>
@@ -124,7 +130,7 @@ $('case').addEventListener('change', () => {
 
 $('start').addEventListener('click', async () => {
   const r = await api('/api/sessions', { initials: $('initials').value, case_id: $('case').value, local_stamp: localStamp() });
-  sid = r.id;
+  sid = r.id; flow('msg');
   $('logFile').textContent = r.logFile;
   $('userLink').textContent = `${location.origin}/user?s=${sid}`;
   $('setup').querySelectorAll('input,select,button').forEach((el) => { el.disabled = true; });
@@ -136,8 +142,12 @@ $('start').addEventListener('click', async () => {
 $('copy').addEventListener('click', () => navigator.clipboard.writeText($('userLink').textContent));
 function grow() { const r = $('reply'); r.style.height = 'auto'; r.style.height = `${Math.max(140, r.scrollHeight + 4)}px`; }
 $('reply').addEventListener('input', () => { edited = true; grow(); showMode(); });
-$('own').addEventListener('click', () => { override = true; $('reply').value = ''; edited = true; $('reply').focus(); showMode(); });
+$('own').addEventListener('click', () => { $('reply').disabled = false; override = true; $('reply').value = ''; edited = true; $('reply').focus(); showMode(); });
 
+function flow(k) {
+  const order = ['msg', 'draft', 'decide', 'score']; const at = order.indexOf(k);
+  document.querySelectorAll('#flow li').forEach((li) => { const i = order.indexOf(li.dataset.k); li.className = i < at ? 'done' : i === at ? 'now' : ''; });
+}
 function showMode() {
   $('mode').textContent = !draftId ? '' : override ? 'Overriding the draft' : edited ? 'Editing the draft' : 'Sending the draft as is';
 }
@@ -149,6 +159,7 @@ $('send').addEventListener('click', async () => {
   $('reply').value = ''; draftId = null; override = false; edited = false;
   $('traceBox').classList.add('hidden');
   $('draftStatus').textContent = 'Sent. Waiting for the tester.';
+  $('reply').disabled = aiName !== 'none'; flow('msg');
   showMode();
   poll();
 });
@@ -158,7 +169,7 @@ function markChanged(tr) {
   const ai = aiRows[tr.dataset.id]; const v = tr.querySelector('input:checked')?.value;
   tr.classList.toggle('changed', !!ai && v !== ai.verdict);
 }
-$('aiScore').addEventListener('click', async () => {
+$('aiScore').addEventListener('click', async () => { flow('score');
   $('aiScore').disabled = true; $('aiScoreMsg').textContent = 'The AI is scoring the session…';
   const g = await api(`/api/sessions/${sid}/autoscore`, {});
   $('aiScore').disabled = false;
@@ -239,16 +250,17 @@ async function poll() {
   const last = st.messages[st.messages.length - 1];
   const pending = st.drafts[st.drafts.length - 1];
   if (aiName === 'none') {
-    if (last && last.role !== 'agent') $('draftStatus').textContent = 'No AI connected: write the reply yourself.';
+    if (last && last.role !== 'agent') { $('draftStatus').textContent = 'No AI connected: write the reply yourself.'; $('reply').disabled = false; flow('decide'); }
     return;
   }
   if (!pending || !last || last.role === 'agent') return;
-  if (pending.status === 'drafting') $('draftStatus').textContent = 'The harness is drafting a reply…';
-  else if (pending.status === 'error') $('draftStatus').textContent = `The harness failed: ${pending.error}. Write the reply yourself.`;
+  if (pending.status === 'drafting') { $('draftStatus').textContent = 'The harness is drafting a reply…'; flow('draft'); }
+  else if (pending.status === 'error') { $('draftStatus').textContent = `The harness failed: ${pending.error}. Write the reply yourself.`; $('reply').disabled = false; flow('decide'); }
   else if (pending.status === 'ready' && pending.draft_id !== draftId) {
     draftId = pending.draft_id;
     if (!edited) { $('reply').value = pending.text; grow(); }
     $('draftStatus').textContent = 'Draft ready. Send it as is, edit it, or write your own.';
+    $('reply').disabled = false; flow('decide');
     renderTrace(pending.trace || []);
     $('traceBox').classList.remove('hidden');
     showMode();

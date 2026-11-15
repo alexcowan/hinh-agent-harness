@@ -59,3 +59,10 @@ body.testerpage { background: #f4f5f7; }
 .phone .me { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:12px; background:rgba(255,255,255,.12); padding:4px 8px 4px 4px; border-radius:16px; }
 .phone .me .face { position:relative; width:24px; height:24px; border-radius:50%; background:#5b8def; color:#fff; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; }
 .phone .me .face::after { content:''; position:absolute; right:-1px; bottom:-1px; width:8px; height:8px; border-radius:50%; background:#3ccf6e; border:2px solid #232b45; }
+
+.flow { list-style: none; margin: 4px 0 14px; padding: 0; font-size: 14px; }
+.flow li { padding: 6px 10px; border-left: 3px solid #e3e6eb; color: #7a8290; margin-bottom: 4px; }
+.flow li.now { border-left-color: #e57200; color: #232b45; background: #fff8ef; font-weight: 600; }
+.flow li.done { color: #2e7d32; }
+.flow li.done::before { content: '✓ '; }
+textarea:disabled { background: #f7f8fa; color: #9aa1ad; cursor: not-allowed; }
