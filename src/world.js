@@ -16,6 +16,7 @@ export function loadHarness() {
     rubric: readJson('harness/rubric.json'),
     tools: readJson('harness/tools.json'),
     permissions: readJson('harness/permissions.json'),
+    app: fs.existsSync(path.join(ROOT, 'harness/app.json')) ? readJson('harness/app.json') : {},
   };
 }
 
@@ -42,8 +43,15 @@ export function deepMerge(base, patch) {
 
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
+// The test data is the one .json file in fixtures/ (whatever it is named).
+function fixturesFile() {
+  const files = fs.readdirSync(path.join(ROOT, 'fixtures')).filter((f) => f.endsWith('.json'));
+  if (files.length !== 1) throw new Error(`fixtures/ should hold exactly one .json file; found ${files.length}.`);
+  return path.join('fixtures', files[0]);
+}
+
 export function makeWorld(caseDef) {
-  const base = readJson('fixtures/hinh.json');
+  const base = readJson(fixturesFile());
   const world = structuredClone(deepMerge(base, caseDef?.fixtures || {}));
   world.actions = [];
   return world;

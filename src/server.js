@@ -54,7 +54,7 @@ async function draftReply(s) {
 }
 
 const routes = {
-  'GET /api/info': () => ({ ai: ai.name, model: ai.model }),
+  'GET /api/info': () => ({ ai: ai.name, model: ai.model, ...loadHarness().app }),
   'GET /api/cases': () => loadCases().map(({ id, type, title, trigger, tester_brief, visible_context, good }) => ({ id, type, title, trigger, tester_brief, visible_context, good })),
   'GET /api/rubric': () => loadHarness().rubric,
 

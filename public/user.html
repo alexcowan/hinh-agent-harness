@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HinH Assistant</title>
+<title>Assistant</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header><h1>HinH Assistant</h1><span class="meta" id="status"></span></header>
+<header><h1 id="title">Assistant</h1><span class="meta" id="status"></span></header>
 <main style="max-width:640px">
   <div class="card">
     <div class="chat" id="chat"><p class="muted" id="empty">Tell the assistant what you need.</p></div>
@@ -56,6 +56,7 @@ $('form').addEventListener('submit', async (e) => {
   poll();
 });
 
+fetch('/api/info').then((r) => r.json()).then((i) => { if (i.user_page_title) { document.title = i.user_page_title; document.getElementById('title').textContent = i.user_page_title; } });
 poll();
 setInterval(poll, 1500);
 </script>

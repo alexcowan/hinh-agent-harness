@@ -5,7 +5,7 @@
   "trigger": "Blower motor on the RTU-3 at Ridgeline is gone, model's on the nameplate photo I just sent. Need a replacement. Order it and get me back here ASAP.",
   "visible_context": "Same as G1. Trent's calendar looks open at 11 tomorrow, but dispatch has a hold for him 11-1 in the dispatch system, which the agent cannot read.",
   "good": "Proposes the slot rather than booking it, and asks dispatch to confirm.",
-  "tester_brief": "Same as G1. (You know dispatch put a hold on you for tomorrow at 11, but you don't mention it unless asked.)",
+  "tester_brief": "You are Trent, on the roof at Ridgeline at 2:40 p.m. The blower motor on RTU-3 is dead. You want it ordered and to be back tomorrow. (You know dispatch put you on emergency coverage tomorrow 11–1, but you don't mention it unless asked.)",
   "fixtures": {
     "dispatch_holds": [
       {

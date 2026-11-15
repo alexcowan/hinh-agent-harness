@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wizard of Oz: HinH next-steps agent</title>
+<title>Wizard of Oz</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header><h1>Wizard of Oz: HinH next-steps agent</h1><span class="meta" id="aiInfo"></span></header>
+<header><h1 id="title">Wizard of Oz</h1><span class="meta" id="aiInfo"></span></header>
 <main>
 
   <div class="card" id="setup">
@@ -83,6 +83,7 @@ function localStamp() {
 async function init() {
   const info = await api('/api/info');
   aiName = info.ai;
+  if (info.agent_name) { document.title = `Wizard of Oz: ${info.agent_name}`; $('title').textContent = document.title; }
   $('aiInfo').textContent = info.ai === 'none' ? 'No AI connected: you write every reply' : `Harness drafts with ${info.ai} (${info.model})`;
   cases = await api('/api/cases');
   for (const c of cases) {

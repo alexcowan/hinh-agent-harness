@@ -1,5 +1,7 @@
 # HinH Agent Harness
 
+**Try it in your browser first:** https://alexcowan.github.io/hinh-agent-harness/
+
 A working example of a harness for an agentic UX, built on HVAC in a Hurry (HinH):
 a field technician hands the next steps of a repair to an agent and gets on the
 road. Use it two ways:
@@ -20,10 +22,11 @@ Replace it with yours. Three golden and three adversarial cases is a good start.
 
 Then tell your AI:
 
-> Update the harness from my-agent.md.
+> Update the harness from my-agent.md and remove everything about HinH.
 
 It rewrites the instructions, rubric, test data, tools, and case files to match,
-and runs the tests. You can do this in a Codespace (below) or with Codex on the
+removes the HinH example, and runs `npm run check` to confirm the tests pass and
+no HinH material is left. You can do this in a Codespace (below) or with Codex on the
 web pointed at your repo, which opens a pull request for you to review and merge.
 
 ## 2. Open it in a Codespace

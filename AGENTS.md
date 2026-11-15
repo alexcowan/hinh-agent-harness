@@ -13,16 +13,19 @@ anything like it), regenerate these files so they match it exactly:
 
 | File | What to put in it |
 |---|---|
+| `harness/app.json` | The names shown on the Wizard of Oz pages: `agent_name` and `user_page_title`. |
 | `harness/instructions.md` | What the agent is for, how it should work, and how it reports back, written from the story and "What it may not do". Always end with a short readback the user can check in ten seconds. |
 | `harness/rubric.json` | One entry per rubric row: `id` (short slug), `question`, `good`, `fails`. |
 | `harness/permissions.json` | The limits from "What it may not do", as values `src/tools.js` can check. |
-| `fixtures/<name>.json` | Made-up but realistic test data covering "What the agent can see and do". Must include `now` and `current_job`. Rename `src/world.js`'s fixtures path if the file name changes. |
+| `fixtures/<name>.json` | Made-up but realistic test data covering "What the agent can see and do". Exactly one .json file in `fixtures/`; name it after the student's product. |
 | `harness/tools.json` | One tool per thing the agent can look up or do, each with a plain one-sentence description and JSON-schema parameters. |
 | `src/tools.js` | An implementation for every tool in `tools.json`, running against the fixtures. Every action must check `permissions.json` and refuse with a clear "Not permitted: ..." message, exactly as the HinH version does. Never move a permission rule into the instructions only. |
 | `cases/<ID>.json` | One file per case: `id`, `type` (golden, adversarial, intervention), `title`, `trigger` (what the user says, word for word), `visible_context`, `good`, `tester_brief` (what to tell a classmate playing the user), and `fixtures` (only the changes to the base test data that make "What's true" true). |
-| `tests/tools.test.js` | Tests that each permission rule is enforced, and that each case's fixtures load. |
+| `tests/` | `tools.test.js`: tests that each permission rule is enforced and each case's fixtures load. `harness.test.js` and `tests/scripts/`: rewrite for one of the student's golden cases, or delete them. |
 
-Then run `npm test` and fix anything that fails. Tell the student which cases you
+When `my-agent.md` describes the student's own product, remove everything about the HinH example: delete `fixtures/hinh.json` and the HinH case files, and leave no HinH names (HinH, Trent, Ridgeline, and so on) anywhere you generate.
+
+Then run `npm run check`. It runs the tests and looks for HinH material left over. Fix anything it reports and run it again until it passes. Tell the student which cases you
 couldn't represent in the test data, if any, instead of quietly dropping them.
 
 If `my-agent.md` is missing something you need (for example, a case with no
@@ -32,6 +35,8 @@ Do not change `src/harness.js`, `src/server.js`, `src/eval.js`, `src/grader.js`,
 or `public/` unless the student asks.
 
 ## Commands to run for the student
+
+- Check that it works (and, once it's theirs, that no HinH is left): `npm run check`.
 
 - Start the Wizard of Oz pages: `npm start` (in a Codespace this starts on its own).
 - Let a classmate reach them: `npm run share`. It prints the links. If it can't

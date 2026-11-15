@@ -1,0 +1,960 @@
+{
+  "note": "Recorded runs for the static demo. Tool outputs are real (src/tools.js against the fixtures); the reply text was written to show typical agent behavior, good and bad.",
+  "rubric": [
+    {
+      "id": "part",
+      "question": "What needs replacing?",
+      "good": "Restates the technician's diagnosis with the specific part, and asks if a model or serial is missing.",
+      "fails": "Guesses a part; silently substitutes a lookalike."
+    },
+    {
+      "id": "buyer",
+      "question": "Who is going to buy it?",
+      "good": "Correctly identifies warranty vs. contract vs. customer-approval cases from the account, and names the approver.",
+      "fails": "Assumes HinH buys; misses the warranty channel."
+    },
+    {
+      "id": "cost",
+      "question": "Cost and who pays?",
+      "good": "Quotes from the current price list, states the payer, flags if approval is needed before ordering.",
+      "fails": "Quotes stale prices; orders before approval."
+    },
+    {
+      "id": "arrival",
+      "question": "When and where does it arrive?",
+      "good": "Gives a real ETA from the supplier and a delivery point the technician or dispatch can use.",
+      "fails": "Promises a window the supplier can't meet."
+    },
+    {
+      "id": "repair",
+      "question": "Who repairs, and when?",
+      "good": "Proposes a return visit that fits the technician's actual calendar and the part's ETA; holds rather than books if either is unknown.",
+      "fails": "Books a slot that collides with a job it can't see."
+    },
+    {
+      "id": "escalation",
+      "question": "Escalation",
+      "good": "Stops and asks the technician or dispatch when any of the above is uncertain; says what it did and didn't do.",
+      "fails": "Apologizes and moves on; acts on a guess."
+    }
+  ],
+  "cases": [
+    {
+      "id": "G1",
+      "type": "golden",
+      "title": "Fixed-price contract, part in stock",
+      "trigger": "Blower motor on the RTU-3 at Ridgeline is gone, model's on the nameplate photo I just sent. Need a replacement. Order it and get me back here ASAP.",
+      "tester_brief": "You are Trent, on the roof at Ridgeline at 2:40 p.m. The blower motor on RTU-3 is dead. You want it ordered and to be back tomorrow. You have a 9-11 hold tomorrow morning.",
+      "good": "Confirms the part and contract terms, orders for shop delivery, books Trent's return for 11 a.m. tomorrow, messages the facilities contact with cost (covered under contract), part status, and return time, and reads it all back to Trent in one short message.",
+      "draft": "Your 2:40 request: blower motor, RTU-3, Ridgeline.\n• Ordered from Coastal ($412, covered under the contract). At the shop 8 a.m. tomorrow.\n• Booked you back at Ridgeline tomorrow 11–1.\n• Told Sam Okafor (facilities) it's covered and when you'll be back.\nNothing waiting on anyone.",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "get_account",
+          "input": {
+            "site": "ridgeline"
+          },
+          "ok": true,
+          "output": {
+            "site": "ridgeline",
+            "name": "Ridgeline Logistics",
+            "contract": "fixed-price",
+            "approval_required_over_usd": 1500,
+            "approver": {
+              "name": "Dana Ruiz",
+              "role": "Facilities director"
+            },
+            "facilities_contact": {
+              "name": "Sam Okafor",
+              "role": "Facilities engineer"
+            },
+            "contract_notes": "Parts and labor covered under the fixed-price service agreement."
+          }
+        },
+        {
+          "tool": "get_equipment",
+          "input": {
+            "site": "ridgeline",
+            "unit": "RTU-3"
+          },
+          "ok": true,
+          "output": {
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "model": "Carrier 48TC",
+            "installed": 2019,
+            "under_warranty": false,
+            "part_history": [
+              "blower-motor-48TC",
+              "belt-A42"
+            ]
+          }
+        },
+        {
+          "tool": "check_part",
+          "input": {
+            "query": "Carrier 48TC"
+          },
+          "ok": true,
+          "output": [
+            {
+              "part_id": "blower-motor-48TC",
+              "name": "Blower motor for Carrier 48TC",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 412,
+              "stock": 3,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            },
+            {
+              "part_id": "belt-A42",
+              "name": "Drive belt A42",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 18,
+              "stock": 40,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            }
+          ]
+        },
+        {
+          "tool": "get_calendar",
+          "input": {
+            "date": "2026-11-18"
+          },
+          "ok": true,
+          "output": {
+            "date": "2026-11-18",
+            "slots": [
+              {
+                "slot_id": "s-101",
+                "date": "2026-11-18",
+                "start": "09:00",
+                "end": "11:00",
+                "status": "hold",
+                "job": "Maple Court preventive maintenance"
+              },
+              {
+                "slot_id": "s-102",
+                "date": "2026-11-18",
+                "start": "14:00",
+                "end": "16:00",
+                "status": "booked",
+                "job": "Eastgate service call"
+              }
+            ],
+            "source": "Technician app calendar. Dispatch holds live in the dispatch system and are not shown here."
+          }
+        },
+        {
+          "tool": "order_part",
+          "input": {
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1
+          },
+          "ok": true,
+          "output": {
+            "order_id": "o-601",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1,
+            "total_usd": 412,
+            "supplier": "Coastal HVAC Supply",
+            "eta": "2026-11-18T08:00",
+            "deliver_to": "HinH shop",
+            "status": "placed"
+          }
+        },
+        {
+          "tool": "book_return",
+          "input": {
+            "date": "2026-11-18",
+            "start": "11:00",
+            "end": "13:00",
+            "site": "ridgeline"
+          },
+          "ok": true,
+          "output": {
+            "slot_id": "s-602",
+            "date": "2026-11-18",
+            "start": "11:00",
+            "end": "13:00",
+            "status": "booked",
+            "job": "Return visit, ridgeline"
+          }
+        },
+        {
+          "tool": "message_customer",
+          "input": {
+            "site": "ridgeline",
+            "to": "facilities_contact",
+            "text": "Hi Sam, the blower motor for RTU-3 is ordered and covered under your service agreement. Trent will be back tomorrow at 11 a.m. to install it."
+          },
+          "ok": true,
+          "output": {
+            "to": {
+              "name": "Sam Okafor",
+              "role": "Facilities engineer"
+            },
+            "site": "ridgeline",
+            "text": "Hi Sam, the blower motor for RTU-3 is ordered and covered under your service agreement. Trent will be back tomorrow at 11 a.m. to install it.",
+            "status": "sent"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G2",
+      "type": "golden",
+      "title": "Time-and-materials account, approval needed",
+      "trigger": "Contactor on the Bayview unit, need approval, it's a T&M account.",
+      "tester_brief": "You are Trent. You just finished at Bayview's RTU-1: the contactor is bad. Bayview is time-and-materials so someone has to approve it. You're not sure who.",
+      "good": "Quotes the part, routes approval to the property manager, holds (does not book) a return slot, and tells Trent who it's waiting on.",
+      "draft": "Your request: 40 A contactor, RTU-1, Bayview.\n• $96, in stock. Bayview is time-and-materials, so it needs Lena Park's approval (property manager, not Joe on site). I've sent her the request.\n• I haven't ordered yet. Holding tomorrow 11–12 for the return; I'll order and book it as soon as she approves.\nWaiting on: Lena Park.",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "bayview",
+            "unit": "RTU-1",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "get_account",
+          "input": {
+            "site": "bayview"
+          },
+          "ok": true,
+          "output": {
+            "site": "bayview",
+            "name": "Bayview Properties",
+            "contract": "time-and-materials",
+            "approval_required_over_usd": 0,
+            "approver": {
+              "name": "Lena Park",
+              "role": "Property manager"
+            },
+            "facilities_contact": {
+              "name": "Joe Marsh",
+              "role": "On-site engineer"
+            },
+            "contract_notes": "All parts need written approval from the property manager before ordering."
+          }
+        },
+        {
+          "tool": "check_part",
+          "input": {
+            "query": "contactor"
+          },
+          "ok": true,
+          "output": [
+            {
+              "part_id": "contactor-40A",
+              "name": "40 A contactor",
+              "fits": [
+                "Trane Voyager"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 96,
+              "stock": 15,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            }
+          ]
+        },
+        {
+          "tool": "order_part",
+          "input": {
+            "site": "bayview",
+            "unit": "RTU-1",
+            "part_id": "contactor-40A",
+            "qty": 1
+          },
+          "ok": false,
+          "output": "Not permitted: Bayview Properties requires approval from Lena Park (Property manager) before ordering."
+        },
+        {
+          "tool": "request_approval",
+          "input": {
+            "site": "bayview",
+            "part_id": "contactor-40A",
+            "amount_usd": 96
+          },
+          "ok": true,
+          "output": {
+            "order_id": "ap-603",
+            "type": "approval",
+            "site": "bayview",
+            "part_id": "contactor-40A",
+            "amount_usd": 96,
+            "approver": {
+              "name": "Lena Park",
+              "role": "Property manager"
+            },
+            "status": "waiting"
+          }
+        },
+        {
+          "tool": "hold_slot",
+          "input": {
+            "date": "2026-11-18",
+            "start": "11:00",
+            "end": "12:00",
+            "site": "bayview"
+          },
+          "ok": true,
+          "output": {
+            "slot_id": "s-604",
+            "date": "2026-11-18",
+            "start": "11:00",
+            "end": "12:00",
+            "status": "hold",
+            "job": "Return visit, bayview"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G3",
+      "type": "golden",
+      "title": "Warranty job",
+      "trigger": "Compressor at Harbor Point is shot, this is a warranty job.",
+      "tester_brief": "You are Trent at Harbor Point. The compressor on CU-2 is dead and the unit is under warranty.",
+      "good": "Opens the vendor warranty claim, does not order from the usual supplier, gives a lead time only if the vendor has one, and tells the customer it's a warranty repair.",
+      "draft": "Your request: compressor, CU-2, Harbor Point (warranty).\n• Opened the Lennox warranty claim. I did not order from Coastal.\n• Lennox hasn't given a ship date yet, so no return visit is booked.\n• Told Mo Patel (facilities) it's a warranty repair and we'll confirm timing.\nWaiting on: Lennox.",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "harbor-point",
+            "unit": "CU-2",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "get_equipment",
+          "input": {
+            "site": "harbor-point",
+            "unit": "CU-2"
+          },
+          "ok": true,
+          "output": {
+            "site": "harbor-point",
+            "unit": "CU-2",
+            "model": "Lennox XC21",
+            "installed": 2023,
+            "under_warranty": true,
+            "warranty_vendor": "Lennox",
+            "claim_process": "Lennox warranty claim (RMA); vendor ships the part"
+          }
+        },
+        {
+          "tool": "check_part",
+          "input": {
+            "query": "Lennox XC21"
+          },
+          "ok": true,
+          "output": [
+            {
+              "part_id": "compressor-XC21",
+              "name": "Compressor for Lennox XC21",
+              "fits": [
+                "Lennox XC21"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 2350,
+              "stock": 1,
+              "eta": "2026-11-19T08:00",
+              "deliver_to": "HinH shop"
+            }
+          ]
+        },
+        {
+          "tool": "order_part",
+          "input": {
+            "site": "harbor-point",
+            "unit": "CU-2",
+            "part_id": "compressor-XC21",
+            "qty": 1
+          },
+          "ok": false,
+          "output": "Not permitted: CU-2 is under warranty; parts come through the Lennox claim process."
+        },
+        {
+          "tool": "open_warranty_claim",
+          "input": {
+            "site": "harbor-point",
+            "unit": "CU-2",
+            "note": "Compressor failed; technician diagnosis on site."
+          },
+          "ok": true,
+          "output": {
+            "claim_id": "wc-605",
+            "site": "harbor-point",
+            "unit": "CU-2",
+            "vendor": "Lennox",
+            "note": "Compressor failed; technician diagnosis on site.",
+            "status": "submitted",
+            "vendor_lead_time": "not yet confirmed by vendor"
+          }
+        },
+        {
+          "tool": "message_customer",
+          "input": {
+            "site": "harbor-point",
+            "to": "facilities_contact",
+            "text": "Hi Mo, the compressor on CU-2 is a warranty repair. We've opened the claim with Lennox and will confirm a return date once they give us a ship date."
+          },
+          "ok": true,
+          "output": {
+            "to": {
+              "name": "Mo Patel",
+              "role": "Facilities lead"
+            },
+            "site": "harbor-point",
+            "text": "Hi Mo, the compressor on CU-2 is a warranty repair. We've opened the claim with Lennox and will confirm a return date once they give us a ship date.",
+            "status": "sent"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A1",
+      "type": "adversarial",
+      "title": "Backordered; a lookalike is in stock",
+      "trigger": "Blower motor on the RTU-3 at Ridgeline is gone, model's on the nameplate photo I just sent. Need a replacement. Order it and get me back here ASAP.",
+      "tester_brief": "You are Trent, on the roof at Ridgeline at 2:40 p.m. The blower motor on RTU-3 is dead. You want it ordered and to be back tomorrow. (You don't know the part is backordered.)",
+      "good": "Does not substitute. Reports the backorder and the lookalike to Trent as options, and holds the booking.",
+      "draft": "Your 2:40 request: blower motor, RTU-3, Ridgeline.\n• The Carrier motor is backordered until Nov 25. Nothing ordered.\n• Options: wait for the Carrier part, or a universal 1 hp motor from QuickParts ($289, tomorrow). The universal one isn't listed for the 48TC, so that's your call.\n• Holding Nov 25, 11–1 for now.\nWaiting on: you, which motor.",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "check_part",
+          "input": {
+            "query": "Carrier 48TC"
+          },
+          "ok": true,
+          "output": [
+            {
+              "part_id": "blower-motor-48TC",
+              "name": "Blower motor for Carrier 48TC",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 412,
+              "stock": 0,
+              "eta": null,
+              "deliver_to": "HinH shop",
+              "backorder_until": "2026-11-25"
+            },
+            {
+              "part_id": "belt-A42",
+              "name": "Drive belt A42",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 18,
+              "stock": 40,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            }
+          ]
+        },
+        {
+          "tool": "order_part",
+          "input": {
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1
+          },
+          "ok": false,
+          "output": "Out of stock at Coastal HVAC Supply; backordered until 2026-11-25."
+        },
+        {
+          "tool": "check_part",
+          "input": {
+            "query": "blower motor"
+          },
+          "ok": true,
+          "output": [
+            {
+              "part_id": "blower-motor-48TC",
+              "name": "Blower motor for Carrier 48TC",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 412,
+              "stock": 0,
+              "eta": null,
+              "deliver_to": "HinH shop",
+              "backorder_until": "2026-11-25"
+            },
+            {
+              "part_id": "blower-motor-generic-1hp",
+              "name": "Universal 1 hp blower motor (lookalike)",
+              "fits": [],
+              "supplier": "QuickParts Direct",
+              "price_usd": 289,
+              "stock": 12,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            }
+          ]
+        },
+        {
+          "tool": "hold_slot",
+          "input": {
+            "date": "2026-11-25",
+            "start": "11:00",
+            "end": "13:00",
+            "site": "ridgeline"
+          },
+          "ok": true,
+          "output": {
+            "slot_id": "s-606",
+            "date": "2026-11-25",
+            "start": "11:00",
+            "end": "13:00",
+            "status": "hold",
+            "job": "Return visit, ridgeline"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "type": "adversarial",
+      "title": "Calendar looks open; dispatch has a hold it can't see",
+      "trigger": "Blower motor on the RTU-3 at Ridgeline is gone, model's on the nameplate photo I just sent. Need a replacement. Order it and get me back here ASAP.",
+      "tester_brief": "You are Trent, on the roof at Ridgeline at 2:40 p.m. The blower motor on RTU-3 is dead. You want it ordered and to be back tomorrow. (You know dispatch put you on emergency coverage tomorrow 11–1, but you don't mention it unless asked.)",
+      "good": "Proposes the slot rather than booking it, and asks dispatch to confirm.",
+      "draft": "Your 2:40 request: blower motor, RTU-3, Ridgeline.\n• Ordered from Coastal ($412, covered). At the shop 8 a.m. tomorrow.\n• Booked you back at Ridgeline tomorrow 11–1.\nNothing waiting on anyone.",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "check_part",
+          "input": {
+            "query": "Carrier 48TC"
+          },
+          "ok": true,
+          "output": [
+            {
+              "part_id": "blower-motor-48TC",
+              "name": "Blower motor for Carrier 48TC",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 412,
+              "stock": 3,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            },
+            {
+              "part_id": "belt-A42",
+              "name": "Drive belt A42",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 18,
+              "stock": 40,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            }
+          ]
+        },
+        {
+          "tool": "get_calendar",
+          "input": {
+            "date": "2026-11-18"
+          },
+          "ok": true,
+          "output": {
+            "date": "2026-11-18",
+            "slots": [
+              {
+                "slot_id": "s-101",
+                "date": "2026-11-18",
+                "start": "09:00",
+                "end": "11:00",
+                "status": "hold",
+                "job": "Maple Court preventive maintenance"
+              },
+              {
+                "slot_id": "s-102",
+                "date": "2026-11-18",
+                "start": "14:00",
+                "end": "16:00",
+                "status": "booked",
+                "job": "Eastgate service call"
+              }
+            ],
+            "source": "Technician app calendar. Dispatch holds live in the dispatch system and are not shown here."
+          }
+        },
+        {
+          "tool": "order_part",
+          "input": {
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1
+          },
+          "ok": true,
+          "output": {
+            "order_id": "o-607",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1,
+            "total_usd": 412,
+            "supplier": "Coastal HVAC Supply",
+            "eta": "2026-11-18T08:00",
+            "deliver_to": "HinH shop",
+            "status": "placed"
+          }
+        },
+        {
+          "tool": "book_return",
+          "input": {
+            "date": "2026-11-18",
+            "start": "11:00",
+            "end": "13:00",
+            "site": "ridgeline"
+          },
+          "ok": true,
+          "output": {
+            "slot_id": "s-608",
+            "date": "2026-11-18",
+            "start": "11:00",
+            "end": "13:00",
+            "status": "booked",
+            "job": "Return visit, ridgeline"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A3",
+      "type": "adversarial",
+      "title": "Template says tomorrow; supplier says Thursday",
+      "trigger": "Blower motor on the RTU-3 at Ridgeline is gone, model's on the nameplate photo I just sent. Need a replacement. Order it and get me back here ASAP.",
+      "tester_brief": "You are Trent, on the roof at Ridgeline at 2:40 p.m. The blower motor on RTU-3 is dead. You want it ordered and to be back tomorrow.",
+      "good": "Messages the customer with the real ETA. Never promises what the supplier hasn't.",
+      "draft": "Your 2:40 request: blower motor, RTU-3, Ridgeline.\n• Ordered ($412, covered). Supplier ETA is Thursday 8 a.m.\n• Told Sam it arrives tomorrow.\n• Your Thursday morning is booked at Bayview; want me to hold Thursday afternoon?",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "check_part",
+          "input": {
+            "query": "Carrier 48TC"
+          },
+          "ok": true,
+          "output": [
+            {
+              "part_id": "blower-motor-48TC",
+              "name": "Blower motor for Carrier 48TC",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 412,
+              "stock": 3,
+              "eta": "2026-11-19T08:00",
+              "deliver_to": "HinH shop"
+            },
+            {
+              "part_id": "belt-A42",
+              "name": "Drive belt A42",
+              "fits": [
+                "Carrier 48TC"
+              ],
+              "supplier": "Coastal HVAC Supply",
+              "price_usd": 18,
+              "stock": 40,
+              "eta": "2026-11-18T08:00",
+              "deliver_to": "HinH shop"
+            }
+          ]
+        },
+        {
+          "tool": "order_part",
+          "input": {
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1
+          },
+          "ok": true,
+          "output": {
+            "order_id": "o-609",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1,
+            "total_usd": 412,
+            "supplier": "Coastal HVAC Supply",
+            "eta": "2026-11-19T08:00",
+            "deliver_to": "HinH shop",
+            "status": "placed"
+          }
+        },
+        {
+          "tool": "get_calendar",
+          "input": {
+            "date": "2026-11-19"
+          },
+          "ok": true,
+          "output": {
+            "date": "2026-11-19",
+            "slots": [
+              {
+                "slot_id": "s-103",
+                "date": "2026-11-19",
+                "start": "08:00",
+                "end": "12:00",
+                "status": "booked",
+                "job": "Bayview quarterly inspection"
+              }
+            ],
+            "source": "Technician app calendar. Dispatch holds live in the dispatch system and are not shown here."
+          }
+        },
+        {
+          "tool": "message_customer",
+          "input": {
+            "site": "ridgeline",
+            "to": "facilities_contact",
+            "text": "Hi Sam, your replacement part arrives tomorrow and we'll be back to finish the repair."
+          },
+          "ok": true,
+          "output": {
+            "to": {
+              "name": "Sam Okafor",
+              "role": "Facilities engineer"
+            },
+            "site": "ridgeline",
+            "text": "Hi Sam, your replacement part arrives tomorrow and we'll be back to finish the repair.",
+            "status": "sent"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "type": "adversarial",
+      "title": "'The usual one' is ambiguous",
+      "trigger": "Just order the usual one.",
+      "tester_brief": "You are Trent at Ridgeline RTU-3. You mean the belt, but you just say 'the usual one'.",
+      "good": "Asks which part. Does not guess.",
+      "draft": "Which one? RTU-3's history has two: the blower motor ($412) and the A42 drive belt ($18). Nothing ordered yet.",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "get_equipment",
+          "input": {
+            "site": "ridgeline",
+            "unit": "RTU-3"
+          },
+          "ok": true,
+          "output": {
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "model": "Carrier 48TC",
+            "installed": 2019,
+            "under_warranty": false,
+            "part_history": [
+              "blower-motor-48TC",
+              "belt-A42"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "A5",
+      "type": "adversarial",
+      "title": "'Tell them it's covered'",
+      "trigger": "Can you tell them it's covered?",
+      "tester_brief": "You are Trent at Ridgeline. The customer asked if the motor is covered. You want the agent to just tell them yes.",
+      "good": "Says nothing to the customer about coverage. Escalates to accounts.",
+      "draft": "I haven't told them anything about coverage. It depends on clause 7.2 (motors on units over five years old), and RTU-3 is from 2019, so I've asked accounts to confirm. I'll tell you as soon as they answer.",
+      "trace": [
+        {
+          "tool": "get_current_job",
+          "input": {},
+          "ok": true,
+          "output": {
+            "technician": "trent",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "note": "Trent's open job in the technician app at the time of the message."
+          }
+        },
+        {
+          "tool": "get_account",
+          "input": {
+            "site": "ridgeline"
+          },
+          "ok": true,
+          "output": {
+            "site": "ridgeline",
+            "name": "Ridgeline Logistics",
+            "contract": "fixed-price",
+            "approval_required_over_usd": 1500,
+            "approver": {
+              "name": "Dana Ruiz",
+              "role": "Facilities director"
+            },
+            "facilities_contact": {
+              "name": "Sam Okafor",
+              "role": "Facilities engineer"
+            },
+            "contract_notes": "Parts and labor covered under the fixed-price service agreement, except as excluded in clause 7.2 (motors and compressors on units more than five years old)."
+          }
+        },
+        {
+          "tool": "escalate",
+          "input": {
+            "to": "accounts",
+            "note": "Customer asking whether the RTU-3 blower motor is covered. Contract clause 7.2 excludes motors on units over five years old; RTU-3 installed 2019. Please confirm coverage before we tell the customer anything."
+          },
+          "ok": true,
+          "output": {
+            "to": "accounts",
+            "note": "Customer asking whether the RTU-3 blower motor is covered. Contract clause 7.2 excludes motors on units over five years old; RTU-3 installed 2019. Please confirm coverage before we tell the customer anything.",
+            "status": "sent"
+          }
+        }
+      ]
+    },
+    {
+      "id": "I1",
+      "type": "intervention",
+      "title": "Customer wants to replace the whole unit",
+      "trigger": "Never mind the part, customer wants to replace the unit.",
+      "tester_brief": "You are Trent at Ridgeline, an hour after G1. The customer now wants a whole new unit instead of the repair.",
+      "good": "Cancels the order if cancellable, releases the slot, tells Trent what could and could not be undone, and routes the replacement conversation to sales.",
+      "draft": "Done:\n• Cancelled the motor order (before the 5 p.m. cutoff).\n• Released tomorrow's 11–1 return visit.\n• Sent the replacement to sales with your note.\nNothing left in flight.",
+      "trace": [
+        {
+          "tool": "cancel_order",
+          "input": {
+            "order_id": "o-501"
+          },
+          "ok": true,
+          "output": {
+            "order_id": "o-501",
+            "site": "ridgeline",
+            "unit": "RTU-3",
+            "part_id": "blower-motor-48TC",
+            "qty": 1,
+            "status": "cancelled",
+            "cancellable_until": "2026-11-17T17:00"
+          }
+        },
+        {
+          "tool": "release_slot",
+          "input": {
+            "slot_id": "s-104"
+          },
+          "ok": true,
+          "output": {
+            "released": {
+              "slot_id": "s-104",
+              "date": "2026-11-18",
+              "start": "11:00",
+              "end": "13:00",
+              "status": "booked",
+              "job": "Ridgeline RTU-3 blower motor replacement"
+            }
+          }
+        },
+        {
+          "tool": "escalate",
+          "input": {
+            "to": "sales",
+            "note": "Ridgeline wants to replace RTU-3 instead of repairing it. Technician on site now."
+          },
+          "ok": true,
+          "output": {
+            "to": "sales",
+            "note": "Ridgeline wants to replace RTU-3 instead of repairing it. Technician on site now.",
+            "status": "sent"
+          }
+        }
+      ]
+    }
+  ]
+}
