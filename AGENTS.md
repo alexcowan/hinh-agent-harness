@@ -20,7 +20,7 @@ anything like it), regenerate these files so they match it exactly:
 | `fixtures/<name>.json` | Made-up but realistic test data covering "What the agent can see and do". Exactly one .json file in `fixtures/`; name it after the student's product. |
 | `harness/tools.json` | One tool per thing the agent can look up or do, each with a plain one-sentence description and JSON-schema parameters. |
 | `src/tools.js` | An implementation for every tool in `tools.json`, running against the fixtures. Every action must check `permissions.json` and refuse with a clear "Not permitted: ..." message, exactly as the HinH version does. Never move a permission rule into the instructions only. |
-| `cases/<ID>.json` | One file per case: `id`, `type` (golden, adversarial, intervention), `title`, `trigger` (what the user says, word for word), `visible_context`, `good`, `tester_brief` (what to tell a classmate playing the user), and `fixtures` (only the changes to the base test data that make "What's true" true). |
+| `cases/<ID>.json` | One file per case: `id`, `type` (golden, adversarial, intervention), `title`, `trigger` (what the user says, word for word), `visible_context`, `good`, `tester_brief` (what to tell a classmate playing the user), `fixtures` (only the changes to the base test data that make "What's true" true), and, only if the case has a **Later** line, `later` (that line, starting with how much time passed in brackets, e.g. "[About three hours later] Lena Park approves the part."). Records the agent creates should carry an id field (`id` or `something_id`) so a Later event can change them. |
 | `tests/` | `tools.test.js`: tests that each permission rule is enforced and each case's fixtures load. `harness.test.js` and `tests/scripts/`: rewrite for one of the student's golden cases, or delete them. |
 
 When `my-agent.md` describes the student's own product, remove everything about the HinH example: delete `fixtures/hinh.json` and the HinH case files, and leave no HinH names (HinH, Trent, Ridgeline, and so on) anywhere you generate.
@@ -39,9 +39,18 @@ or `public/` unless the student asks.
 - Check that it works (and, once it's theirs, that no HinH is left): `npm run check`.
 
 - Start the Wizard of Oz pages: `npm start` (in a Codespace this starts on its own).
-- Let a classmate reach them: `npm run share`. It prints the links. If it can't
-  change the port's visibility, tell the student to open the Ports tab,
-  right-click port 3000, and choose Port Visibility, Public.
+  Give the student the wizard link (`/wizard`). The tester's link comes from
+  the wizard page once a session starts.
+- Let a classmate reach them:
+  - In a Codespace (`CODESPACE_NAME` is set): `npm run share`. It prints the
+    links. If it can't change the port's visibility, tell the student to open
+    the Ports tab, right-click port 3000, and choose Port Visibility, Public.
+  - On the student's own computer: the links work only on that computer. Say
+    so plainly. For a classmate in the room, the simplest way is to open the
+    tester's link in a second browser window on the same computer and hand it
+    over. For a tester on another device, suggest opening the repository in a
+    Codespace and sharing from there. Don't set up tunnels or change network
+    settings unless the student asks.
 - Run the eval: `npm run eval` (all cases) or `npm run eval -- --case A1`.
 - Save sessions and results to GitHub: `npm run save`.
 - When they're done with a session: `npm run unshare` to make the port private.
@@ -55,6 +64,7 @@ Then regenerate the case files.
 
 ## Things to keep true
 
-- Never put an API key in a file. Keys live in Codespaces secrets.
+- Never put an API key in a file. In a Codespace, keys live in Codespaces
+  secrets; on the student's own computer, in an environment variable.
 - Logs use initials, never names.
 - Language models are called "AI" in anything the student reads.

@@ -1,7 +1,8 @@
 // The Wizard of Oz server.
 //
 //   /wizard  the wizard's page: start a session, see each harness draft,
-//            send it as is, edit it, or write your own; score the session.
+//            send it as is, edit it, or write your own; let time pass;
+//            have the AI score the session first, then agree or change it.
 //   /user    the tester's page: a plain chat. Open it from the link the
 //            wizard page gives you.
 //
@@ -16,6 +17,7 @@ import crypto from 'node:crypto';
 import { ROOT, loadHarness, loadCases, loadCase, makeWorld } from './world.js';
 import { getProvider } from './ai.js';
 import { runHarness } from './harness.js';
+import { gradeRun } from './grader.js';
 
 const PORT = Number(process.env.PORT || 3000);
 const ai = getProvider();
@@ -53,6 +55,51 @@ async function draftReply(s) {
   log(s, { type: 'draft', draft_id: draft.draft_id, status: draft.status, text: draft.text, trace: draft.trace, error: draft.error });
 }
 
+async function proposeLater(s, hint) {
+  const { caseDef } = s;
+  const world = JSON.stringify(s.world, (k, v) => (k === 'actions' ? undefined : v)).slice(0, 8000);
+  const system = 'You play the rest of the world in a Wizard-of-Oz test of an AI agent. Time has passed since the last message. ' +
+    'Write the ONE thing that most plausibly happens next because of what the agent did (an approval comes back, a supplier confirms, a customer replies), ' +
+    'as a short line starting with how much time passed in brackets, e.g. "[About 3 hours later] Lena Park approves the $96 part by email." ' +
+    'If it changes a record in the world, say how in updates, using that record\'s id. Answer with JSON only.';
+  const prompt = [
+    caseDef ? `Case: ${caseDef.title}. ${caseDef.good}` : 'Free play.',
+    hint ? `The case author suggests: ${hint}` : '',
+    `The world now (JSON): ${world}`,
+    'The conversation so far:',
+    ...s.messages.map((m) => `${m.role}: ${m.text}`),
+    '',
+    'Respond with exactly: {"text":"[time] what happens","updates":[{"id":"<record id>","set":{"<field>":"<new value>"}}]}',
+  ].join('\n');
+  const res = await ai.chat({ system, messages: [{ role: 'user', text: prompt }] });
+  try {
+    const m = String(res.text).match(/\{[\s\S]*\}/);
+    const j = JSON.parse(m ? m[0] : res.text);
+    return { text: String(j.text || ''), updates: Array.isArray(j.updates) ? j.updates : [] };
+  } catch {
+    return { text: String(res.text || '').trim(), updates: [] };
+  }
+}
+
+// Finds records in the world by id (any field named id or ending in _id)
+// and changes the given fields, e.g. an approval's status to "approved".
+function applyUpdates(world, updates) {
+  const applied = new Set();
+  const seen = new Set();
+  const visit = (node) => {
+    if (!node || typeof node !== 'object' || seen.has(node)) return;
+    seen.add(node);
+    if (Array.isArray(node)) return node.forEach(visit);
+    for (const u of updates) {
+      const hit = Object.entries(node).some(([k, v]) => (k === 'id' || k.endsWith('_id')) && v === u.id);
+      if (hit && u.set && typeof u.set === 'object') { Object.assign(node, u.set); applied.add(u); }
+    }
+    Object.values(node).forEach(visit);
+  };
+  visit(world);
+  return [...applied];
+}
+
 const routes = {
   'GET /api/info': () => ({ ai: ai.name, model: ai.model, ...loadHarness().app }),
   'GET /api/cases': () => loadCases().map(({ id, type, title, trigger, tester_brief, visible_context, good }) => ({ id, type, title, trigger, tester_brief, visible_context, good })),
@@ -74,6 +121,9 @@ const routes = {
       logFile,
       ended: false,
       scored: false,
+      usedTraces: [],
+      aiScore: null,
+      caseDef,
     };
     sessions.set(s.id, s);
     log(s, { type: 'session_start', initials, case_id: s.caseId, ai: ai.name, model: ai.model });
@@ -97,17 +147,48 @@ const routes = {
     const draft = s.drafts.find((d) => d.draft_id === body.draft_id && d.status === 'ready');
     let action = 'wizard_only';
     if (draft) action = body.override ? 'overridden' : text === draft.text ? 'sent_as_is' : 'edited';
-    if (draft && action !== 'overridden') s.world = draft.worldAfter; // the draft's actions now count
+    if (draft && action !== 'overridden') { s.world = draft.worldAfter; s.usedTraces.push(...(draft.trace || [])); } // the draft's actions now count
     if (draft) draft.status = `used:${action}`;
     s.messages.push({ role: 'agent', text, at: new Date().toISOString() });
     log(s, { type: 'agent_message', text, action, draft_id: draft?.draft_id || null, draft_text: draft && action !== 'sent_as_is' ? draft.text : undefined });
     return { ok: true, action };
   },
 
+  // Time passes: the AI proposes what happens next in the world (an approval
+  // comes in, a part ships). The wizard edits it, then posts it with /event.
+  'POST /api/sessions/:id/later': async (s) => {
+    const hint = s.caseDef?.later || '';
+    if (!ai.chat) return { text: hint || '[A few hours later] ', updates: [] };
+    return proposeLater(s, hint);
+  },
+
+  'POST /api/sessions/:id/event': (s, body) => {
+    const text = String(body.text || '').trim();
+    if (!text || s.ended) return { ok: false };
+    const applied = applyUpdates(s.world, Array.isArray(body.updates) ? body.updates : []);
+    s.messages.push({ role: 'event', text, at: new Date().toISOString() });
+    log(s, { type: 'event', text, updates: applied });
+    draftReply(s); // the agent gets a chance to act on what happened
+    return { ok: true, applied };
+  },
+
+  // The AI scores the session first; the wizard agrees or changes each row.
+  'POST /api/sessions/:id/autoscore': async (s) => {
+    if (!ai.chat) return { error: 'No AI connected, so there is no first-pass score. Score it yourself.' };
+    const conversation = s.messages.map((m) => `${m.role}: ${m.text}`).join('\n\n');
+    const g = await gradeRun({ ai, rubric: loadHarness().rubric, caseDef: s.caseDef, trace: s.usedTraces, conversation });
+    s.aiScore = g;
+    log(s, { type: 'ai_score', rows: g.rows, overall: g.overall });
+    return g;
+  },
+
   'POST /api/sessions/:id/score': (s, body) => {
-    log(s, { type: 'score', scores: body.scores || {}, note: body.note || '' });
+    const scores = body.scores || {};
+    const ai_rows = s.aiScore ? Object.fromEntries(s.aiScore.rows.map((r) => [r.id, r.verdict])) : null;
+    const changed_from_ai = ai_rows ? Object.keys(scores).filter((k) => scores[k] && ai_rows[k] && scores[k] !== ai_rows[k]) : undefined;
+    log(s, { type: 'score', scores, note: body.note || '', ai_scores: ai_rows || undefined, changed_from_ai });
     s.scored = true;
-    return { ok: true };
+    return { ok: true, changed_from_ai };
   },
 
   'POST /api/sessions/:id/end': (s) => {

@@ -68,6 +68,7 @@ and what good looks like.
 - **User says:** "Contactor on the Bayview unit, need approval, it's a T&M account."
 - **What's true:** Bayview needs written approval from the property manager (Lena Park), not the on-site engineer. The contactor is $96, in stock.
 - **Good looks like:** Quotes it, sends the approval request to Lena Park, holds (doesn't book) a return slot, and tells Trent who it's waiting on.
+- **Later (optional):** About three hours later, Lena Park approves it by email. Good looks like: orders it, turns the hold into a booking, and tells Trent and Lena.
 
 ### G3 (golden): warranty job
 - **User says:** "Compressor at Harbor Point is shot, this is a warranty job."

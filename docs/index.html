@@ -7,36 +7,51 @@
 <link rel="stylesheet" href="style.css">
 <style>
   .banner { background:#fff8ef; border:1px solid #f1c48f; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:15px; }
-  .phone { max-width: 100%; }
   .good { background:#eef6ee; border-left:4px solid #2e7d32; padding:8px 12px; font-size:14px; margin-top:10px; }
-  .pill { display:inline-block; font-size:12px; padding:2px 8px; border-radius:10px; background:#eef0f4; margin-left:6px; }
   .steps { font-size: 14px; margin: 6px 0 0 18px; padding: 0; }
+  .roles { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px; }
+  .role { background:#fff; border:1px solid #e3e6eb; border-radius:6px; padding:8px 10px; font-size:14px; }
+  .msg.event { align-self:center; max-width:92%; background:#fff8ef; border:1px dashed #f1c48f; color:#6b4a1e; font-style:italic; font-size:14px; }
+  .later { margin-top: 12px; border-top: 1px solid #e3e6eb; padding-top: 10px; }
+  .aiwhy { font-size: 13px; color: #1f4e79; margin-top: 4px; }
+  .rubric tr.changed td { background: #fff4e5; }
+  body.tester .wiz { display:none !important; }
+  body.tester .cols { grid-template-columns: minmax(0,1fr); max-width: 640px; margin: 0 auto; }
 </style>
 </head>
 <body>
-<header><h1>Try it: Wizard of Oz with an agent harness</h1><span class="meta"><a style="color:#fff" href="https://github.com/alexcowan/hinh-agent-harness">The code on GitHub</a></span></header>
+<header><h1 id="h1">Try it: Wizard of Oz with an agent harness</h1><span class="meta wiz"><a style="color:#fff" href="https://github.com/alexcowan/hinh-agent-harness">The code on GitHub</a></span></header>
 <main>
-  <div class="banner">
+  <div class="banner wiz">
     <b>What this is.</b> HVAC in a Hurry's next-steps agent: a technician hands off the next steps of a repair and gets on the road.
-    Here you play both sides. Pick a case, send the technician's message, then decide what the agent actually says.
-    <b>The drafts on this page are recorded, and some are wrong on purpose.</b> Your job is to catch them.
-    In your own copy, an AI writes the drafts live and a classmate plays the user.
+    A Wizard-of-Oz session has two people on two screens:
+    <div class="roles">
+      <div class="role"><b>The tester</b> plays the technician. They see only a chat (panel 2) and think they're talking to the agent.</div>
+      <div class="role"><b>You, the wizard</b>, see the harness's draft and what it did (panel 3), and decide what the tester actually gets.</div>
+    </div>
+    <p style="margin:10px 0 0">Here you can play both parts yourself, or <a href="#" id="openTester">open the tester's screen in a second window</a> to see the split.
+    <b>The drafts on this page are recorded, and some are wrong on purpose.</b> Your job is to catch them. In your own copy, an AI writes the drafts live and a classmate is the tester.</p>
   </div>
 
-  <div class="card">
+  <div class="card wiz">
     <h2>1. Pick a case</h2>
     <select id="case"></select>
     <div class="brief" id="brief"></div>
-    <div class="row"><button id="play">Send the technician's message</button><button class="secondary" id="reset">Start over</button></div>
+    <div class="row"><button id="play">Send the technician's message for me</button><button class="secondary" id="reset">Start over</button></div>
   </div>
 
   <div class="cols">
     <div class="card">
-      <h2>2. What the technician sees</h2>
+      <h2 id="chatTitle">2. The tester's screen</h2>
+      <div class="brief hidden" id="testerBrief"></div>
       <div class="chat" id="chat"></div>
+      <form class="composer" id="composer">
+        <input type="text" id="text" placeholder="Type as the technician" autocomplete="off" aria-label="Message">
+        <button id="tsend">Send</button>
+      </form>
     </div>
-    <div class="card">
-      <h2>3. Your reply, as the agent</h2>
+    <div class="card wiz">
+      <h2>3. Your screen, as the wizard</h2>
       <p class="muted" id="status">Waiting for the technician's message.</p>
       <textarea id="reply" placeholder="The harness's draft will appear here"></textarea>
       <div class="row">
@@ -45,88 +60,161 @@
         <span class="muted" id="mode"></span>
       </div>
       <details id="traceBox" class="hidden" open>
-        <summary class="muted">What the harness did (tool calls; ✗ means the code refused it)</summary>
+        <summary class="muted">What the harness did (tool calls)</summary>
         <div class="trace" id="trace"></div>
+        <p class="muted hidden" id="blockedNote">✗ <b>Blocked</b> means the harness's code refused that step (a permission rule, or the world said no). That's the guardrail working. Check whether the AI noticed and did the right thing instead.</p>
       </details>
+      <div class="later hidden" id="laterWrap">
+        <button class="secondary" id="laterBtn">Let time pass…</button>
+        <div id="laterBox" class="hidden">
+          <label for="laterText">What happens next (the tester sees this; in your copy the AI suggests it)</label>
+          <textarea id="laterText" style="min-height:60px"></textarea>
+          <div class="row"><button id="laterPost">Post it</button></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="card hidden" id="scoreCard">
+  <div class="card hidden wiz" id="scoreCard">
     <h2>4. Score it against the rubric</h2>
     <div class="good" id="good"></div>
+    <p class="muted">The AI has scored it first. Check each row and change any you disagree with.</p>
     <table class="rubric" id="rubric"></table>
     <p class="muted" id="verdict"></p>
   </div>
 
-  <div class="card">
+  <div class="card wiz">
     <h2>Make your own</h2>
-    <ol class="steps">
-      <li>On the GitHub page, click <b>Use this template</b> and create a private repository.</li>
-      <li>Open it in a Codespace (<b>Code → Codespaces</b>). Click <b>Trust Folder &amp; Continue</b> if asked.</li>
-      <li>Type <code>codex</code> in the terminal, sign in, and ask: <i>"Check that this harness works: run the tests and share the Wizard of Oz page."</i></li>
-      <li>Replace <code>my-agent.md</code> with your story, rubric, and cases, then ask: <i>"Update the harness from my-agent.md and remove everything about HinH."</i></li>
-    </ol>
+    <p class="muted" style="margin-top:0">The code is a template on GitHub. Your copy runs the same two pages, with an AI drafting live. See the course page for the steps.</p>
   </div>
 </main>
 <script>
 const $ = (id) => document.getElementById(id);
-let data, cur, draft = '', override = false, edited = false;
+const isTester = new URLSearchParams(location.search).get('view') === 'tester';
+const bc = 'BroadcastChannel' in window ? new BroadcastChannel('hinh-demo') : null;
+let data, cur, chat = [], draft = '', override = false, edited = false, phase = 'idle';
 const short = (x, n) => (x.length > n ? x.slice(0, n - 1) + '…' : x);
 
-fetch('recordings.json').then((r) => r.json()).then((d) => {
-  data = d;
-  for (const c of d.cases) { const o = document.createElement('option'); o.value = c.id; o.textContent = `${c.id} (${c.type}): ${c.title}`; $('case').appendChild(o); }
-  for (const r of d.rubric) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = '<td><b></b><br><span class="muted"></span></td><td class="v">' + ['pass', 'fail', 'n/a'].map((v) => `<label style="display:inline;font-weight:400"><input type="radio" name="r-${r.id}" value="${v}"> ${v}</label>`).join(' ') + '</td>';
-    tr.querySelector('b').textContent = r.question; tr.querySelector('.muted').textContent = 'Good: ' + r.good;
-    $('rubric').appendChild(tr);
+function renderChat() {
+  $('chat').innerHTML = '';
+  for (const m of chat) { const d = document.createElement('div'); d.className = 'msg ' + m.role; d.textContent = m.text; $('chat').appendChild(d); }
+  $('chat').scrollTop = 1e9;
+}
+function broadcast() { if (bc && !isTester) bc.postMessage({ type: 'state', chat, brief: cur && cur.tester_brief }); }
+
+if (isTester) {
+  document.body.classList.add('tester');
+  $('h1').textContent = 'HinH Assistant';
+  $('chatTitle').textContent = 'Assistant';
+  if (bc) {
+    bc.onmessage = (e) => {
+      if (e.data.type !== 'state') return;
+      chat = e.data.chat; renderChat();
+      $('testerBrief').innerHTML = '<b>You are the technician.</b> ' + (e.data.brief || '');
+      $('testerBrief').classList.remove('hidden');
+    };
+    bc.postMessage({ type: 'hello' });
   }
-  pick();
-});
+  $('composer').addEventListener('submit', (e) => {
+    e.preventDefault(); const t = $('text').value.trim(); if (!t || !bc) return;
+    $('text').value = ''; bc.postMessage({ type: 'user', text: t });
+  });
+} else {
+  $('composer').style.display = 'none';
+  $('openTester').addEventListener('click', (e) => { e.preventDefault(); window.open('?view=tester', 'tester', 'width=520,height=760'); });
+  if (bc) bc.onmessage = (e) => {
+    if (e.data.type === 'hello') broadcast();
+    if (e.data.type === 'user' && phase === 'idle') technicianSays(e.data.text);
+  };
+  fetch('recordings.json').then((r) => r.json()).then((d) => {
+    data = d;
+    for (const c of d.cases) { const o = document.createElement('option'); o.value = c.id; o.textContent = `${c.id} (${c.type}): ${c.title}`; $('case').appendChild(o); }
+    for (const r of d.rubric) {
+      const tr = document.createElement('tr'); tr.dataset.id = r.id;
+      tr.innerHTML = '<td><b></b><br><span class="muted"></span><div class="aiwhy"></div></td><td class="v">' + ['pass', 'fail', 'n/a'].map((v) => `<label style="display:inline;font-weight:400"><input type="radio" name="r-${r.id}" value="${v}"> ${v}</label>`).join(' ') + '</td>';
+      tr.querySelector('b').textContent = r.question; tr.querySelector('.muted').textContent = 'Good: ' + r.good;
+      tr.addEventListener('change', () => { markChanged(tr); summary(); });
+      $('rubric').appendChild(tr);
+    }
+    pick();
+  });
+}
 
 function pick() {
   cur = data.cases.find((c) => c.id === $('case').value) || data.cases[0];
-  $('brief').innerHTML = '<b>You are the technician.</b> ' + cur.tester_brief;
+  $('brief').innerHTML = '<b>The tester is told:</b> ' + cur.tester_brief + ` Their opening message could be: "${cur.trigger}"`;
   reset();
 }
 function reset() {
-  $('chat').innerHTML = ''; $('reply').value = ''; $('trace').innerHTML = ''; $('traceBox').classList.add('hidden');
+  chat = []; renderChat(); broadcast(); phase = 'idle'; if (cur) delete cur._laterUsed;
+  $('reply').value = ''; $('trace').innerHTML = ''; $('traceBox').classList.add('hidden'); $('laterWrap').classList.add('hidden'); $('laterBox').classList.add('hidden');
   $('scoreCard').classList.add('hidden'); $('status').textContent = "Waiting for the technician's message.";
   $('send').disabled = true; $('own').disabled = true; $('play').disabled = false; override = false; edited = false; $('mode').textContent = '';
-  document.querySelectorAll('#rubric input').forEach((i) => { i.checked = false; });
 }
-function say(role, text) { const d = document.createElement('div'); d.className = 'msg ' + role; d.textContent = text; $('chat').appendChild(d); $('chat').scrollTop = 1e9; }
+function say(role, text) { chat.push({ role, text }); renderChat(); broadcast(); }
 function grow() { const r = $('reply'); r.style.height = 'auto'; r.style.height = Math.max(140, r.scrollHeight + 4) + 'px'; }
 function mode() { $('mode').textContent = override ? 'Overriding the draft' : edited ? 'Editing the draft' : 'Sending the draft as is'; }
 
+function showDraft(text, trace) {
+  draft = text; $('reply').value = draft; grow(); override = false; edited = false;
+  $('trace').innerHTML = '';
+  for (const t of trace) {
+    const d = document.createElement('div'); if (!t.ok) d.className = 'err';
+    const args = Object.values(t.input || {}).map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join(', ');
+    const full = typeof t.output === 'string' ? t.output : JSON.stringify(t.output);
+    d.textContent = t.ok ? `✓ ${t.tool}(${short(args, 50)}) → ${short(full, 90)}` : `✗ Blocked: ${t.tool}(${short(args, 40)}). ${short(full.replace(/^Not permitted: /, ''), 90)}`;
+    d.title = full; $('trace').appendChild(d);
+  }
+  $('blockedNote').classList.toggle('hidden', !trace.some((t) => !t.ok));
+  $('traceBox').classList.remove('hidden');
+  $('status').textContent = 'Draft ready. Is it right? Send it as is, edit it, or write your own.';
+  $('send').disabled = false; $('own').disabled = false; mode();
+}
+
+function technicianSays(text) {
+  phase = 'drafting'; $('play').disabled = true; say('user', text); $('status').textContent = 'The harness is drafting a reply…';
+  setTimeout(() => showDraft(cur.draft, cur.trace), 1200);
+}
+
 $('case').addEventListener('change', pick);
 $('reset').addEventListener('click', reset);
-$('play').addEventListener('click', () => {
-  $('play').disabled = true; say('user', cur.trigger); $('status').textContent = 'The harness is drafting a reply…';
-  setTimeout(() => {
-    draft = cur.draft; $('reply').value = draft; grow();
-    $('trace').innerHTML = '';
-    for (const t of cur.trace) {
-      const d = document.createElement('div'); if (!t.ok) d.className = 'err';
-      const args = Object.values(t.input || {}).map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join(', ');
-      const full = typeof t.output === 'string' ? t.output : JSON.stringify(t.output);
-      d.textContent = `${t.ok ? '✓' : '✗'} ${t.tool}(${short(args, 50)}) → ${short(full, 90)}`; d.title = full; $('trace').appendChild(d);
-    }
-    $('traceBox').classList.remove('hidden');
-    $('status').textContent = 'Draft ready. Is it right? Send it as is, edit it, or write your own.';
-    $('send').disabled = false; $('own').disabled = false; mode();
-  }, 1200);
-});
+$('play').addEventListener('click', () => technicianSays(cur.trigger));
 $('reply').addEventListener('input', () => { edited = true; grow(); mode(); });
 $('own').addEventListener('click', () => { override = true; edited = true; $('reply').value = ''; $('reply').focus(); mode(); });
 $('send').addEventListener('click', () => {
   const t = $('reply').value.trim(); if (!t) return;
-  say('agent', t); $('send').disabled = true; $('own').disabled = true;
+  say('agent', t); $('send').disabled = true; $('own').disabled = true; phase = 'sent';
   $('status').textContent = override ? 'You overrode the draft: that is a candidate new case.' : edited ? 'You edited the draft: that is a candidate new case.' : 'You sent the draft as is.';
-  $('good').innerHTML = '<b>What good looks like for this case:</b> ' + cur.good;
-  $('scoreCard').classList.remove('hidden'); $('scoreCard').scrollIntoView({ behavior: 'smooth' });
+  if (cur.later && !cur._laterUsed) { $('laterWrap').classList.remove('hidden'); $('status').textContent += ' This case continues: try Let time pass.'; }
+  showScore();
 });
+$('laterBtn').addEventListener('click', () => { $('laterText').value = cur.later.event; $('laterBox').classList.remove('hidden'); });
+$('laterPost').addEventListener('click', () => {
+  const t = $('laterText').value.trim(); if (!t) return;
+  cur._laterUsed = true; $('laterWrap').classList.add('hidden'); $('laterBox').classList.add('hidden');
+  say('event', t); $('status').textContent = 'The harness is drafting what to do now…';
+  setTimeout(() => showDraft(cur.later.draft, cur.later.trace), 1200);
+});
+
+let aiRows = {};
+function markChanged(tr) { const a = aiRows[tr.dataset.id]; const v = tr.querySelector('input:checked')?.value; tr.classList.toggle('changed', !!a && v !== a.verdict); }
+function summary() {
+  const n = document.querySelectorAll('#rubric tr.changed').length;
+  $('verdict').textContent = n ? `You changed ${n} of the AI's rows. Disagreements like these are how you improve the grader.` : '';
+}
+function showScore() {
+  const sc = cur._laterUsed && cur.later.ai_score ? cur.later.ai_score : cur.ai_score;
+  aiRows = Object.fromEntries((sc || []).map((r) => [r.id, r]));
+  document.querySelectorAll('#rubric tr').forEach((tr) => {
+    const a = aiRows[tr.dataset.id];
+    tr.querySelectorAll('input').forEach((i) => { i.checked = !!a && i.value === a.verdict; });
+    tr.querySelector('.aiwhy').textContent = a ? `AI says ${a.verdict}: ${a.why}` : '';
+    markChanged(tr);
+  });
+  summary();
+  $('good').innerHTML = '<b>What good looks like for this case:</b> ' + cur.good;
+  $('scoreCard').classList.remove('hidden');
+}
 </script>
 </body>
 </html>

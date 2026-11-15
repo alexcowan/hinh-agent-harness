@@ -47,12 +47,23 @@
         <details id="traceBox" class="hidden" open>
           <summary class="muted">What the harness did (tool calls)</summary>
           <div class="trace" id="trace"></div>
+          <p class="muted hidden" id="blockedNote">✗ <b>Blocked</b> means the harness's code refused that step (a permission rule, or the world said no). That's the guardrail working. Check whether the AI noticed and did the right thing instead.</p>
         </details>
+        <div class="later">
+          <button class="secondary" id="laterBtn" title="Skip ahead in time: an approval comes back, a part ships, the customer replies">Let time pass…</button>
+          <div id="laterBox" class="hidden">
+            <label for="laterText">What happens next (the tester sees this; edit it as you like)</label>
+            <textarea id="laterText" style="min-height:70px"></textarea>
+            <p class="muted" id="laterUpdates"></p>
+            <div class="row"><button id="laterPost">Post it</button><button class="secondary" id="laterCancel">Cancel</button></div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="card">
       <h2>Score the session against the rubric</h2>
+      <div class="row" style="margin-top:0"><button class="secondary" id="aiScore">Have the AI score it first</button><span class="muted" id="aiScoreMsg">The AI fills in each row with a reason. You agree or change it.</span></div>
       <table class="rubric" id="rubric"></table>
       <label for="note">Note</label>
       <input type="text" id="note" placeholder="What surprised you? What new case does this suggest?">
@@ -98,7 +109,9 @@ async function init() {
       ['pass', 'fail', 'n/a'].map((v) => `<label style="display:inline;font-weight:400"><input type="radio" name="r-${r.id}" value="${v}"> ${v}</label>`).join(' ') + '</td>';
     tr.querySelector('b').textContent = r.question;
     tr.querySelector('.muted').textContent = `Good: ${r.good}`;
+    const why = document.createElement('div'); why.className = 'aiwhy hidden'; tr.querySelector('td').appendChild(why);
     tr.dataset.id = r.id;
+    tr.addEventListener('change', () => markChanged(tr));
     $('rubric').appendChild(tr);
   }
 }
@@ -140,13 +153,33 @@ $('send').addEventListener('click', async () => {
   poll();
 });
 
+let aiRows = {};
+function markChanged(tr) {
+  const ai = aiRows[tr.dataset.id]; const v = tr.querySelector('input:checked')?.value;
+  tr.classList.toggle('changed', !!ai && v !== ai.verdict);
+}
+$('aiScore').addEventListener('click', async () => {
+  $('aiScore').disabled = true; $('aiScoreMsg').textContent = 'The AI is scoring the session…';
+  const g = await api(`/api/sessions/${sid}/autoscore`, {});
+  $('aiScore').disabled = false;
+  if (g.error) { $('aiScoreMsg').textContent = g.error; return; }
+  aiRows = Object.fromEntries(g.rows.map((r) => [r.id, r]));
+  document.querySelectorAll('#rubric tr').forEach((tr) => {
+    const r = aiRows[tr.dataset.id]; if (!r) return;
+    const input = tr.querySelector(`input[value="${r.verdict}"]`); if (input) input.checked = true;
+    const why = tr.querySelector('.aiwhy'); why.textContent = `AI says ${r.verdict}: ${r.why}`; why.classList.remove('hidden');
+    markChanged(tr);
+  });
+  $('aiScoreMsg').textContent = 'AI first pass is filled in. Check each row; change any you disagree with, then save.';
+});
+
 $('saveScore').addEventListener('click', async () => {
   const scores = {};
   document.querySelectorAll('#rubric tr').forEach((tr) => {
     const v = tr.querySelector('input:checked'); scores[tr.dataset.id] = v ? v.value : null;
   });
-  await api(`/api/sessions/${sid}/score`, { scores, note: $('note').value });
-  $('endMsg').textContent = 'Score saved to the log.';
+  const r = await api(`/api/sessions/${sid}/score`, { scores, note: $('note').value });
+  $('endMsg').textContent = r.changed_from_ai?.length ? `Score saved. You changed ${r.changed_from_ai.length} of the AI's rows: worth a look when you improve the grader.` : 'Score saved to the log.';
 });
 
 $('end').addEventListener('click', async () => {
@@ -157,15 +190,33 @@ $('end').addEventListener('click', async () => {
 
 const short = (x, n) => (x.length > n ? `${x.slice(0, n - 1)}…` : x);
 
+let pendingUpdates = [];
+$('laterBtn').addEventListener('click', async () => {
+  $('laterBox').classList.remove('hidden'); $('laterText').value = ''; $('laterText').placeholder = 'The AI is imagining what happens next…';
+  const r = await api(`/api/sessions/${sid}/later`, {});
+  $('laterText').value = r.text || ''; $('laterText').placeholder = '[About 3 hours later] …';
+  pendingUpdates = r.updates || [];
+  $('laterUpdates').textContent = pendingUpdates.length ? `This also changes the test data: ${pendingUpdates.map((u) => `${u.id} → ${JSON.stringify(u.set)}`).join('; ')}` : '';
+});
+$('laterCancel').addEventListener('click', () => { $('laterBox').classList.add('hidden'); });
+$('laterPost').addEventListener('click', async () => {
+  const text = $('laterText').value.trim(); if (!text) return;
+  await api(`/api/sessions/${sid}/event`, { text, updates: pendingUpdates });
+  $('laterBox').classList.add('hidden'); pendingUpdates = [];
+  $('reply').value = ''; draftId = null; override = false; edited = false; showMode();
+  poll();
+});
+
 function renderTrace(trace) {
   $('trace').innerHTML = '';
+  $('blockedNote').classList.toggle('hidden', !trace.some((t) => !t.ok));
   if (!trace.length) { $('trace').textContent = '(no tool calls)'; return; }
   for (const t of trace) {
     const d = document.createElement('div');
     if (!t.ok) d.className = 'err';
     const args = Object.values(t.input || {}).map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join(', ');
     const full = typeof t.output === 'string' ? t.output : JSON.stringify(t.output);
-    d.textContent = `${t.ok ? '✓' : '✗'} ${t.tool}(${short(args, 50)}) → ${short(full, 90)}`;
+    d.textContent = t.ok ? `✓ ${t.tool}(${short(args, 50)}) → ${short(full, 90)}` : `✗ Blocked: ${t.tool}(${short(args, 40)}). ${short(full.replace(/^Not permitted: /, ''), 90)}`;
     d.title = full;
     $('trace').appendChild(d);
   }
@@ -188,10 +239,10 @@ async function poll() {
   const last = st.messages[st.messages.length - 1];
   const pending = st.drafts[st.drafts.length - 1];
   if (aiName === 'none') {
-    if (last?.role === 'user') $('draftStatus').textContent = 'No AI connected: write the reply yourself.';
+    if (last && last.role !== 'agent') $('draftStatus').textContent = 'No AI connected: write the reply yourself.';
     return;
   }
-  if (!pending || !last || last.role !== 'user') return;
+  if (!pending || !last || last.role === 'agent') return;
   if (pending.status === 'drafting') $('draftStatus').textContent = 'The harness is drafting a reply…';
   else if (pending.status === 'error') $('draftStatus').textContent = `The harness failed: ${pending.error}. Write the reply yourself.`;
   else if (pending.status === 'ready' && pending.draft_id !== draftId) {

@@ -16,15 +16,18 @@ export async function runHarness({ ai, harness, world, transcript }) {
   const system = `${harness.instructions}\n\nThe current date and time is ${world.now}. ` +
     `You are acting for technician "${harness.permissions.acts_as}".`;
 
-  // transcript: [{ role: 'user' | 'agent', text }]
+  // transcript: [{ role: 'user' | 'agent' | 'event', text }]
+  // An event is something that happened while time passed (an approval came
+  // in, a part shipped). The AI hears it on the user's side, labeled.
   // Consecutive messages from the same side are merged, and the conversation
   // always starts with the technician, because some AI APIs require that.
   const messages = [];
   for (const t of transcript) {
-    const role = t.role === 'user' ? 'user' : 'assistant';
+    const role = t.role === 'agent' ? 'assistant' : 'user';
+    const text = t.role === 'event' ? `(Update, not from the user: ${t.text})` : t.text;
     const last = messages[messages.length - 1];
-    if (last && last.role === role) last.text += `\n\n${t.text}`;
-    else messages.push({ role, text: t.text });
+    if (last && last.role === role) last.text += `\n\n${text}`;
+    else messages.push({ role, text });
   }
   if (messages[0]?.role !== 'user') messages.unshift({ role: 'user', text: '(No message yet.)' });
   const trace = [];
