@@ -14,7 +14,7 @@
     <div class="tip">Type like your character would. The opening line is up to you.</div>
   </div>
   <div class="phone">
-    <div class="bar"><div class="avatar" id="initial">A</div><div class="who"><b id="title">Assistant</b><span id="status">replies in a minute</span></div></div>
+    <div class="bar"><div class="avatar" id="initial">A</div><div class="who"><b id="title">Assistant</b><span id="status">replies in a minute</span></div><div class="me hidden" id="me"><div class="face" id="meFace"></div><span id="meName"></span></div></div>
     <div class="chat" id="chat"></div>
     <form class="composer" id="form">
       <input type="text" id="text" placeholder="Message" autocomplete="off" aria-label="Message">
@@ -62,6 +62,7 @@ $('form').addEventListener('submit', async (e) => {
 });
 
 fetch('/api/info').then((r) => r.json()).then((i) => {
+  if (i.user_name) { $('meName').textContent = i.user_name; $('meFace').textContent = i.user_name.trim()[0].toUpperCase(); $('me').title = `Signed in as ${i.user_name}`; $('me').classList.remove('hidden'); }
   if (i.user_page_title) { document.title = i.user_page_title; $('title').textContent = i.user_page_title; $('initial').textContent = i.user_page_title.trim()[0].toUpperCase(); }
 });
 poll();

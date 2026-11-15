@@ -13,7 +13,7 @@ anything like it), regenerate these files so they match it exactly:
 
 | File | What to put in it |
 |---|---|
-| `harness/app.json` | The names shown on the Wizard of Oz pages: `agent_name` and `user_page_title`. |
+| `harness/app.json` | The names shown on the Wizard of Oz pages: `agent_name`, `user_page_title`, and `user_name` (the persona the tester plays, shown as signed in on the tester's screen). |
 | `harness/instructions.md` | What the agent is for, how it should work, and how it reports back, written from the story and "What it may not do". Always end with a short readback the user can check in ten seconds. |
 | `harness/rubric.json` | One entry per rubric row: `id` (short slug), `question`, `good`, `fails`. |
 | `harness/permissions.json` | The limits from "What it may not do", as values `src/tools.js` can check. |
