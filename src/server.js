@@ -1,10 +1,9 @@
-// The Wizard of Oz server.
+// The test harness server.
 //
-//   /wizard  the wizard's page: start a session, see each harness draft,
-//            send it as is, edit it, or write your own; let time pass;
-//            have the AI score the session first, then agree or change it.
-//   /user    the tester's page: a plain chat. Open it from the link the
-//            wizard page gives you.
+//   /        the test page: pick a case, play the user on the phone, then
+//            check each harness draft and send it as is, edit it, or write
+//            your own; let time pass; have the AI score the session first,
+//            then agree or change it.
 //
 // Every event is written to logs/<date>-<time>-<initials>.jsonl, one JSON
 // object per line, so you (or an AI) can read the session back later.
@@ -44,7 +43,7 @@ async function draftReply(s) {
   if (!ai.chat) return;
   const draft = { draft_id: `d${s.drafts.length + 1}`, status: 'drafting', forMessage: s.messages.length };
   s.drafts.push(draft);
-  const world = structuredClone(s.world); // dry run: nothing changes unless the wizard sends it
+  const world = structuredClone(s.world); // dry run: nothing changes unless you send it
   world.actions = [];
   try {
     const res = await runHarness({ ai, harness: loadHarness(), world, transcript: s.messages.map(({ role, text }) => ({ role, text })) });
@@ -138,7 +137,7 @@ const routes = {
     if (!text || s.ended) return { ok: false };
     s.messages.push({ role: 'user', text, at: new Date().toISOString() });
     log(s, { type: 'user_message', text });
-    draftReply(s); // runs in the background; the wizard page polls for it
+    draftReply(s); // runs in the background; the test page polls for it
     return { ok: true };
   },
 
@@ -156,7 +155,7 @@ const routes = {
   },
 
   // Time passes: the AI proposes what happens next in the world (an approval
-  // comes in, a part ships). The wizard edits it, then posts it with /event.
+  // comes in, a part ships). You edit it, then posts it with /event.
   'POST /api/sessions/:id/later': async (s) => {
     const hint = s.caseDef?.later || '';
     if (!ai.chat) return { text: hint || '[A few hours later] ', updates: [] };
@@ -173,7 +172,7 @@ const routes = {
     return { ok: true, applied };
   },
 
-  // The AI scores the session first; the wizard agrees or changes each row.
+  // The AI scores the session first; you agree or changes each row.
   'POST /api/sessions/:id/autoscore': async (s) => {
     if (!ai.chat) return { error: 'No AI connected, so there is no first-pass score. Score it yourself.' };
     const conversation = s.messages.map((m) => `${m.role}: ${m.text}`).join('\n\n');
@@ -202,8 +201,7 @@ const routes = {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
-    if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/wizard')) return sendFile(res, 'public/wizard.html');
-    if (req.method === 'GET' && url.pathname === '/user') return sendFile(res, 'public/user.html');
+    if (req.method === 'GET' && ['/', '/test', '/wizard'].includes(url.pathname)) return sendFile(res, 'public/test.html');
     if (req.method === 'GET' && url.pathname === '/style.css') return sendFile(res, 'public/style.css', 'text/css');
 
     const m = url.pathname.match(/^\/api\/sessions\/([\w-]+)(\/\w+)?$/);
@@ -242,6 +240,6 @@ function readBody(req) {
 }
 
 server.listen(PORT, () => {
-  console.log(`Wizard of Oz server on port ${PORT}. AI: ${ai.name}${ai.model ? ` (${ai.model})` : ' (the wizard writes every reply)'}`);
-  console.log(`Open /wizard to start a session.`);
+  console.log(`Test harness on port ${PORT}. AI: ${ai.name}${ai.model ? ` (${ai.model})` : ' (you write every reply)'}`);
+  console.log(`Open the page on port ${PORT} to start.`);
 });

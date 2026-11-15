@@ -6,7 +6,7 @@
 //   3. Repeat until the AI answers in plain text, or MAX_STEPS is reached.
 //
 // Returns the reply plus a trace of every tool call, which is what the
-// Wizard of Oz page shows the wizard and what the eval grader reads.
+// test page shows you and what the eval grader reads.
 
 import { runTool } from './tools.js';
 

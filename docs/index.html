@@ -64,19 +64,16 @@
 </style>
 </head>
 <body>
-<header><h1 id="h1">Try it: Wizard of Oz with an agent harness</h1><span class="meta wiz"><a style="color:#fff" href="https://github.com/alexcowan/hinh-agent-harness">The code on GitHub</a></span></header>
+<header><h1 id="h1">Try it: testing an agentic UX with a test harness</h1><span class="meta wiz"><a style="color:#fff" href="https://github.com/alexcowan/hinh-agent-harness">The code on GitHub</a></span></header>
 <main>
   <div class="banner wiz">
     <b>What this is.</b> A test harness for HVAC in a Hurry's agentic UX on parts replacement. It has two roles:
     <div class="roles">
       <div class="role"><b>The technician</b> (Trent) hands off the next steps of a repair from his phone and gets back on the road. Whoever plays him sees only the chat and a role card.</div>
-      <div class="role"><b>The agent</b> drafts a reply and acts in HinH's systems. In a Wizard-of-Oz test, a person (the wizard) sees each draft and what it did, and decides what the technician actually gets.</div>
+      <div class="role"><b>The agent</b> drafts a reply and acts in HinH's systems. Before anything reaches Trent, a person checks each draft and what the agent did, and decides what he actually gets.</div>
     </div>
-    <p style="margin:10px 0 4px">Its purpose is to let you test and train the AI on example cases. Two ways to use it:</p>
-    <ul style="margin:0 0 0 18px; padding:0">
-      <li><b>Play both parts yourself.</b> Pick a case, then send Trent's opening line from the phone. Quick for walking through the golden and adversarial cases.</li>
-      <li><b>With a human tester.</b> <a href="#" id="openTester">Open the tester's screen in a second window</a> on this computer and let a classmate type as Trent while you play the wizard. To test across two computers, use your own copy of the harness.</li>
-    </ul>
+    <p style="margin:10px 0 4px"><b>You play one role at a time.</b> Pick a case, send Trent's opening line from the phone, then switch sides and check the agent's draft before it goes back to him.</p>
+    <p style="margin:4px 0 0">To test with a real person instead, run a Wizard-of-Oz session: no harness, just Teams or text. Send them a prompt like the role card ("Pretend you're Trent, on a roof at Ridgeline…") and play the agent yourself.</p>
     <p style="margin:8px 0 0"><b>The drafts on this page are recorded, and some are wrong on purpose.</b> Your job is to catch them.</p>
   </div>
 
@@ -89,7 +86,7 @@
   <div class="cols">
     <div id="testerRole" class="hidden"></div>
     <div class="card phonecard" id="phoneCard">
-      <h2 class="wiz"><span class="step">2</span>The tester's screen</h2>
+      <h2 class="wiz"><span class="step">2</span>Play the user</h2>
       <div id="brief" class="wiz" style="margin-bottom:14px"></div>
       <div class="phone">
         <div class="bar"><div class="avatar">H</div><div class="who"><b>HinH Assistant</b><span>Field ops · replies in a minute</span></div><div class="me" title="Signed in as Trent"><div class="face">T</div>Trent</div></div>
@@ -102,9 +99,9 @@
       </div>
     </div>
     <div class="card wiz">
-      <h2><span class="step">3</span>Your screen, as the wizard</h2>
+      <h2><span class="step">3</span>Check the agent's reply</h2>
       <ol class="flow" id="flow">
-        <li data-k="msg">The technician sends a message (from the phone)</li>
+        <li data-k="msg">You send a message as Trent, from the phone</li>
         <li data-k="draft">The harness drafts a reply here, with what it did</li>
         <li data-k="decide">You send it as is, edit it, or write your own</li>
         <li data-k="score">You score it against the rubric (step 4)</li>
@@ -124,7 +121,7 @@
       <div class="later hidden" id="laterWrap">
         <button class="secondary" id="laterBtn">Let time pass…</button>
         <div id="laterBox" class="hidden">
-          <label for="laterText">What happens next (the tester sees this; in your copy the AI suggests it)</label>
+          <label for="laterText">What happens next (Trent sees this; in your copy the AI suggests it)</label>
           <textarea id="laterText" style="min-height:60px"></textarea>
           <div class="row"><button id="laterPost">Post it</button></div>
         </div>
@@ -158,14 +155,14 @@ function roleCard(c, forWizard) {
   const r = c.role || {};
   const rows = [['You are', 'Trent, HVAC field technician'], ['Where', r.where], ["What's wrong", r.problem], ['You want', r.want], ...(r.know || []).map((k) => ['You know', k])]
     .filter(([, v]) => v).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
-  return `<div class="rolecard"><div class="tag"><span>${forWizard ? "The tester's role card" : 'Your role'}</span><span>${forWizard ? '' : 'only you see this'}</span></div>` +
+  return `<div class="rolecard"><div class="tag"><span>${forWizard ? "The user's role card" : 'Your role'}</span><span>${forWizard ? '' : 'only you see this'}</span></div>` +
     `<dl>${rows}</dl>` + (r.secret ? `<div class="secret">${esc(r.secret)}</div>` : '') +
     `<div class="tip">${forWizard ? `Opening line, if they need one: “${esc(c.trigger)}”` : 'Type like Trent would: short, on a phone, between jobs.'}</div></div>`;
 }
 function compactCard(c) {
   const r = c.role || {};
   const bits = ['Trent', r.where, r.problem, r.want].filter(Boolean).map(esc).join(' · ');
-  return `<div class="compact"><b>Tester's role</b>${bits}<a href="#" id="fullCard">show full card</a></div>`;
+  return `<div class="compact"><b>The user's role</b>${bits}<a href="#" id="fullCard">show full card</a></div>`;
 }
 function renderChat() {
   $('chat').innerHTML = '';
@@ -195,7 +192,7 @@ if (isTester) {
     e.preventDefault(); const t = $('text').value.trim(); if (!t || phase !== 'idle') return;
     $('text').value = ''; technicianSays(t);
   });
-  $('openTester').addEventListener('click', (e) => { e.preventDefault(); window.open('?view=tester', 'tester', 'width=780,height=760'); });
+  $('openTester')?.addEventListener('click', (e) => { e.preventDefault(); window.open('?view=tester', 'tester', 'width=780,height=760'); });
   if (bc) bc.onmessage = (e) => {
     if (e.data.type === 'hello') broadcast();
     if (e.data.type === 'user' && phase === 'idle') technicianSays(e.data.text);

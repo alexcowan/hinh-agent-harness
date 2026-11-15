@@ -2,8 +2,8 @@
 //
 //   OPENAI_API_KEY     -> OpenAI   (model: AI_MODEL, default below)
 //   ANTHROPIC_API_KEY  -> Anthropic (model: AI_MODEL, default below)
-//   neither            -> no AI: the Wizard of Oz page still works (the wizard
-//                         writes every reply), and evals are graded by hand.
+//   neither            -> no AI: the test page still works (you
+//                         write every reply), and evals are graded by hand.
 //
 // AI_PROVIDER=openai|anthropic|none forces a choice. AI_PROVIDER=script is for
 // the automated tests: it replays canned responses from the file in AI_SCRIPT.

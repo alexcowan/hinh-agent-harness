@@ -31,24 +31,25 @@ Then paste this into your AI coding assistant, filling in the brackets:
 
 It will ask what it needs and take you as far as your setup allows:
 
-1. **It runs.** You play your cases on the Wizard of Oz page, writing the agent's
-   replies yourself. No API key needed.
-2. **The AI is connected.** The harness drafts replies; you send, edit, or
-   override them. Needs an OpenAI or Anthropic API key, kept in an environment
-   variable or Codespaces secret, never in a file.
-3. **Two-player mode.** A teammate plays the user from their own computer. A
-   Codespace is the easiest way to share the link.
-4. **Evals.** Your AI runs every case and tells you which rubric rows fail most
+1. **It runs.** You play your cases on the test page, one role at a time: the
+   user on the phone, then the agent, writing its replies yourself. No API key
+   needed.
+2. **The AI is connected.** The harness drafts the agent's replies; you send,
+   edit, or override them. Needs an OpenAI or Anthropic API key, kept in an
+   environment variable or Codespaces secret, never in a file.
+3. **Evals.** Your AI runs every case and tells you which rubric rows fail most
    often.
+
+To test with a real person, run a Wizard-of-Oz session instead: no harness, just
+Teams or text. Ask your AI to write the prompt for a case ("Pretend you're…"),
+send it to your test subject, and play the agent yourself.
 
 If it isn't working, ask your AI to explain what's failing before trying again.
 
 ## Things to keep true
 
 - Keep your repository private. Session logs live in it.
-- Logs use testers' initials, never names.
-- After a two-player session, make the page private again (`npm run unshare`,
-  or ask your AI).
+- Logs never hold real names.
 
 ## What's where
 
@@ -58,6 +59,6 @@ If it isn't working, ask your AI to explain what's failing before trying again.
 | `harness/` | Instructions, rubric, tools, permissions | Your AI, from `my-agent.md` |
 | `cases/`, `fixtures/` | Case files and made-up test data | Your AI, from `my-agent.md` |
 | `src/tools.js` | The tools, with the permission checks | Your AI, from `my-agent.md` |
-| `src/` (the rest), `public/` | The orchestrator, eval, and Wizard of Oz pages | Nobody, usually |
+| `src/` (the rest), `public/` | The orchestrator, eval, and test page | Nobody, usually |
 | `logs/`, `results/` | What your sessions and evals leave behind | Generated |
 | `docs/` | The browser demo | Nobody |

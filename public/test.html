@@ -3,48 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wizard of Oz</title>
+<title>Test harness</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header><h1 id="title">Wizard of Oz</h1><span class="meta" id="aiInfo"></span></header>
+<header><h1 id="title">Test harness</h1><span class="meta" id="aiInfo"></span></header>
 <main>
 
   <div class="card" id="setup">
-    <h2><span class="step">1</span>Start a session</h2>
-    <label for="initials">Subject's initials</label>
-    <input type="text" id="initials" maxlength="4" placeholder="e.g. JS" style="max-width:120px">
-    <label for="case">Case to play (optional)</label>
-    <select id="case"><option value="">Free play: the tester makes up their own situation</option></select>
+    <h2><span class="step">1</span>Pick a case</h2>
+    <p class="muted" style="margin-top:0">You play one role at a time: first the user, on the phone; then the agent's reviewer, checking each draft before it goes back.</p>
+    <select id="case"><option value="">Free play: make up your own situation</option></select>
     <div id="caseInfo" class="hidden">
-      <div class="brief"><b>Read this to the tester:</b> <span id="brief"></span></div>
-      <p class="muted"><b>Given</b> (what the harness can see): <span id="visible"></span><br><b>When</b> the tester says something like the opening line, <b>Then</b> good looks like: <span id="good"></span></p>
+      <p class="muted"><b>Given</b> (what the harness can see): <span id="visible"></span><br><b>When</b> the user says something like the opening line, <b>Then</b> good looks like: <span id="good"></span></p>
     </div>
-    <div class="row"><button id="start">Start session</button></div>
+    <div class="row"><button id="start">Start</button></div>
   </div>
 
   <div id="live" class="hidden">
-    <div class="card">
-      <h2><span class="step">2</span>Send this link to the tester</h2>
-      <div class="row"><span class="link" id="userLink"></span><button class="secondary" id="copy">Copy</button></div>
-      <p class="muted">Logging to <b id="logFile"></b>. Commit it to your repo when you're done.</p>
-    </div>
-
     <div class="cols">
       <div class="card">
-        <h2><span class="step">3</span>Conversation (what the tester sees)</h2>
-        <div class="chat" id="chat"></div>
+        <h2><span class="step">2</span>Play the user</h2>
+        <div class="rolecard hidden" id="role" style="width:auto;margin-bottom:14px">
+          <div class="tag"><span>The user's role</span></div>
+          <p id="brief"></p>
+        </div>
+        <div class="phone" style="margin:0 auto">
+          <div class="bar"><div class="avatar" id="initial">A</div><div class="who"><b id="appTitle">Assistant</b><span>replies in a minute</span></div><div class="me hidden" id="me"><div class="face" id="meFace"></div><span id="meName"></span></div></div>
+          <div class="chat" id="chat"></div>
+          <form class="composer" id="composer">
+            <input type="text" id="text" placeholder="Message" autocomplete="off" aria-label="Message">
+            <button id="tsend" aria-label="Send">➤</button>
+          </form>
+        </div>
       </div>
       <div class="card">
-        <h2><span class="step">4</span>Your reply</h2>
+        <h2><span class="step">3</span>Check the agent's reply</h2>
         <ol class="flow" id="flow">
-          <li data-k="msg">The tester sends a message from their screen</li>
+          <li data-k="msg">You send a message as the user, from the phone</li>
           <li data-k="draft">The harness drafts a reply here, with what it did</li>
           <li data-k="decide">You send it as is, edit it, or write your own</li>
-          <li data-k="score">When the session is done, score it against the rubric (step 5)</li>
+          <li data-k="score">When you're done, score it against the rubric (step 4)</li>
         </ol>
-        <p class="muted" id="draftStatus">Waiting for the tester's first message.</p>
-        <textarea id="reply" placeholder="The harness's draft will appear here once the tester writes" disabled></textarea>
+        <p class="muted" id="draftStatus">Waiting for the user's first message.</p>
+        <textarea id="reply" placeholder="The harness's draft will appear here once the user writes" disabled></textarea>
         <div class="row">
           <button id="send">Send</button>
           <button class="secondary" id="own">Write my own instead</button>
@@ -58,7 +60,7 @@
         <div class="later">
           <button class="secondary" id="laterBtn" title="Skip ahead in time: an approval comes back, a part ships, the customer replies">Let time pass…</button>
           <div id="laterBox" class="hidden">
-            <label for="laterText">What happens next (the tester sees this; edit it as you like)</label>
+            <label for="laterText">What happens next (the user sees this; edit it as you like)</label>
             <textarea id="laterText" style="min-height:70px"></textarea>
             <p class="muted" id="laterUpdates"></p>
             <div class="row"><button id="laterPost">Post it</button><button class="secondary" id="laterCancel">Cancel</button></div>
@@ -68,7 +70,7 @@
     </div>
 
     <div class="card">
-      <h2><span class="step">5</span>Score the session against the rubric</h2>
+      <h2><span class="step">4</span>Score it against the rubric</h2>
       <div class="row" style="margin-top:0"><button class="secondary" id="aiScore">Have the AI score it first</button><span class="muted" id="aiScoreMsg">The AI fills in each row with a reason. You agree or change it.</span></div>
       <table class="rubric" id="rubric"></table>
       <label for="note">Note</label>
@@ -78,6 +80,7 @@
         <button id="end">End session</button>
         <span class="muted" id="endMsg"></span>
       </div>
+      <p class="muted">Logging to <b id="logFile"></b>.</p>
     </div>
   </div>
 </main>
@@ -100,7 +103,9 @@ function localStamp() {
 async function init() {
   const info = await api('/api/info');
   aiName = info.ai;
-  if (info.agent_name) { document.title = `Wizard of Oz: ${info.agent_name}`; $('title').textContent = document.title; }
+  if (info.agent_name) { document.title = `Test harness: ${info.agent_name}`; $('title').textContent = document.title; }
+  if (info.user_page_title) { $('appTitle').textContent = info.user_page_title; $('initial').textContent = info.user_page_title.trim()[0].toUpperCase(); }
+  if (info.user_name) { $('meName').textContent = info.user_name; $('meFace').textContent = info.user_name.trim()[0].toUpperCase(); $('me').classList.remove('hidden'); }
   $('aiInfo').textContent = info.ai === 'none' ? 'No AI connected: you write every reply' : `Harness drafts with ${info.ai} (${info.model})`;
   cases = await api('/api/cases');
   for (const c of cases) {
@@ -125,21 +130,28 @@ async function init() {
 $('case').addEventListener('change', () => {
   const c = cases.find((x) => x.id === $('case').value);
   $('caseInfo').classList.toggle('hidden', !c);
-  if (c) { $('brief').textContent = `${c.tester_brief} Your opening message could be: "${c.trigger}"`; $('visible').textContent = c.visible_context; $('good').textContent = c.good; }
+  if (c) { $('visible').textContent = c.visible_context; $('good').textContent = c.good; }
 });
 
 $('start').addEventListener('click', async () => {
-  const r = await api('/api/sessions', { initials: $('initials').value, case_id: $('case').value, local_stamp: localStamp() });
+  const c = cases.find((x) => x.id === $('case').value);
+  const r = await api('/api/sessions', { initials: 'ME', case_id: $('case').value, local_stamp: localStamp() });
+  if (c) { $('brief').textContent = c.tester_brief; $('role').classList.remove('hidden'); $('text').value = c.trigger; }
   sid = r.id; flow('msg');
   $('logFile').textContent = r.logFile;
-  $('userLink').textContent = `${location.origin}/user?s=${sid}`;
   $('setup').querySelectorAll('input,select,button').forEach((el) => { el.disabled = true; });
   $('live').classList.remove('hidden');
   poll();
   setInterval(poll, 1500);
 });
 
-$('copy').addEventListener('click', () => navigator.clipboard.writeText($('userLink').textContent));
+$('composer').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = $('text').value.trim(); if (!text || !sid) return;
+  $('text').value = '';
+  await api(`/api/sessions/${sid}/user`, { text });
+  poll();
+});
 function grow() { const r = $('reply'); r.style.height = 'auto'; r.style.height = `${Math.max(140, r.scrollHeight + 4)}px`; }
 $('reply').addEventListener('input', () => { edited = true; grow(); showMode(); });
 $('own').addEventListener('click', () => { $('reply').disabled = false; override = true; $('reply').value = ''; edited = true; $('reply').focus(); showMode(); });
@@ -158,7 +170,7 @@ $('send').addEventListener('click', async () => {
   await api(`/api/sessions/${sid}/agent`, { text, draft_id: draftId, override });
   $('reply').value = ''; draftId = null; override = false; edited = false;
   $('traceBox').classList.add('hidden');
-  $('draftStatus').textContent = 'Sent. Waiting for the tester.';
+  $('draftStatus').textContent = 'Sent. Your turn as the user, on the phone.';
   $('reply').disabled = aiName !== 'none'; flow('msg');
   showMode();
   poll();
@@ -196,7 +208,7 @@ $('saveScore').addEventListener('click', async () => {
 $('end').addEventListener('click', async () => {
   const r = await api(`/api/sessions/${sid}/end`, {});
   $('endMsg').textContent = `Session ended. Commit ${r.logFile} to your repo.`;
-  $('send').disabled = true; $('own').disabled = true;
+  $('send').disabled = true; $('own').disabled = true; $('tsend').disabled = true;
 });
 
 const short = (x, n) => (x.length > n ? `${x.slice(0, n - 1)}…` : x);

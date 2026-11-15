@@ -3,14 +3,14 @@
   "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
   "postCreateCommand": "npm install -g @openai/codex || true",
   "postAttachCommand": {
-    "wizard-of-oz": "npm start"
+    "test-harness": "npm start"
   },
   "forwardPorts": [
     3000
   ],
   "portsAttributes": {
     "3000": {
-      "label": "Wizard of Oz",
+      "label": "Test harness",
       "onAutoForward": "silent"
     }
   },
