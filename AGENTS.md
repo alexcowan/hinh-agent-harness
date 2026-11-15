@@ -31,10 +31,12 @@ what good looks like). Two or three golden and two or three adversarial cases is
 enough to start; don't ask for more before level 1 runs. Put their material into
 `my-agent.md` in its existing format, keeping their wording.
 
-**If something you need is blocked by your sandbox** (reaching GitHub, the
-AI key calls at level 2, saving to GitHub), stop and tell the student in one line
-which setting to change (in Codex: Full access, in the permissions selector under
-the message box), then try again. Don't work around it or carry on without it.
+**If something you need is blocked by your sandbox** (the AI key calls at
+level 2, or saving to GitHub), stop and tell the student in one line what's
+blocked and the simplest way around it: allow internet access in their
+assistant's settings if it has one, or run that one command in their own
+terminal. Don't work around it silently or carry on without it. Levels 1 and 3
+need no internet.
 
 Then choose the simplest way to get them running, and tell them what you chose
 and why in a sentence. Copying this repo's files into their repository and
