@@ -26,6 +26,12 @@ Then choose the simplest way to get them running, and tell them what you chose
 and why in a sentence. Copying this repo's files into their repository and
 adapting them is usually simplest. Don't rebuild what already works here.
 
+Where it lives: a new private repository for their team, separate from their
+project's, named `<their project>-agent-harness`, with teammates added as
+collaborators and a link to it from their project repo's README next to the
+user story it tests. Create it for them if you can; if you can't, tell them the
+one or two clicks to do it, then carry on.
+
 **Then the levels.** Each is useful on its own; get as far as their setup allows.
 1. **It runs.** The Wizard of Oz page opens and they can play one of their own
    cases, writing the agent's replies themselves. This needs no API key.
