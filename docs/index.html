@@ -16,7 +16,33 @@
   .aiwhy { font-size: 13px; color: #1f4e79; margin-top: 4px; }
   .rubric tr.changed td { background: #fff4e5; }
   body.tester .wiz { display:none !important; }
-  body.tester .cols { grid-template-columns: minmax(0,1fr); max-width: 640px; margin: 0 auto; }
+  body.tester header { display:none; }
+  body.tester main { max-width: 820px; padding-top: 28px; }
+  body.tester .cols { display:flex; gap:28px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
+
+  /* The role card: stage directions for the tester. Paper, not chat. */
+  .rolecard { background:#fffdf3; border:2px dashed #b9a46a; border-radius:4px; padding:14px 16px 12px; font-size:14px; color:#3b3524; box-shadow: 3px 3px 0 #ece4c8; }
+  .rolecard .tag { font: 700 11px/1 ui-monospace, Menlo, monospace; letter-spacing:.12em; text-transform:uppercase; color:#8a7536; margin-bottom:10px; display:flex; justify-content:space-between; }
+  .rolecard dl { margin:0; display:grid; grid-template-columns: 92px 1fr; gap:6px 10px; }
+  .rolecard dt { font-weight:700; color:#6b5c2e; }
+  .rolecard dd { margin:0; }
+  .rolecard .secret { margin-top:10px; padding:6px 8px; background:#f6edcf; border-radius:3px; font-style:italic; }
+  .rolecard .tip { margin-top:10px; font-size:12px; color:#8a7536; }
+  body.tester .rolecard { width: 300px; }
+  .wiz .rolecard { margin-top: 10px; }
+
+  /* The phone: what the tester sees */
+  .phone { width: 360px; max-width:100%; margin: 0 auto; background:#fff; border:10px solid #1d2233; border-radius:34px; overflow:hidden; display:flex; flex-direction:column; height: 600px; box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+  .phone .bar { background:#232b45; color:#fff; padding:12px 14px; display:flex; gap:10px; align-items:center; }
+  .phone .avatar { width:34px; height:34px; border-radius:50%; background:#e57200; color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .phone .who b { display:block; font-size:15px; } .phone .who span { font-size:12px; opacity:.75; }
+  .phone .chat { flex:1; max-height:none; min-height:0; border:0; border-radius:0; background:#f2f3f7; padding:12px; margin:0; overflow-y:auto; }
+  .phone .msg { font-size:14px; }
+  .phone .msg.agent { background:#fff; border:1px solid #e3e6eb; }
+  .phone .composer { display:flex; gap:8px; padding:10px; background:#fff; border-top:1px solid #e3e6eb; margin:0; }
+  .phone .composer input { border-radius:20px; padding:8px 14px; margin:0; }
+  .phone .composer button { border-radius:50%; width:38px; height:38px; padding:0; flex:none; font-size:16px; }
+  .phonecard h2 { text-align:center; }
 </style>
 </head>
 <body>
@@ -36,19 +62,22 @@
   <div class="card wiz">
     <h2>1. Pick a case</h2>
     <select id="case"></select>
-    <div class="brief" id="brief"></div>
-    <div class="row"><button id="play">Send the technician's message for me</button><button class="secondary" id="reset">Start over</button></div>
+    <div id="brief"></div>
+    <div class="row"><button id="play">Send the opening line for me</button><button class="secondary" id="reset">Start over</button></div>
   </div>
 
   <div class="cols">
-    <div class="card">
-      <h2 id="chatTitle">2. The tester's screen</h2>
-      <div class="brief hidden" id="testerBrief"></div>
-      <div class="chat" id="chat"></div>
-      <form class="composer" id="composer">
-        <input type="text" id="text" placeholder="Type as the technician" autocomplete="off" aria-label="Message">
-        <button id="tsend">Send</button>
-      </form>
+    <div id="testerRole" class="hidden"></div>
+    <div class="card phonecard" id="phoneCard">
+      <h2 class="wiz">2. The tester's screen</h2>
+      <div class="phone">
+        <div class="bar"><div class="avatar">H</div><div class="who"><b>HinH Assistant</b><span>Field ops · replies in a minute</span></div></div>
+        <div class="chat" id="chat"></div>
+        <form class="composer" id="composer">
+          <input type="text" id="text" placeholder="Message" autocomplete="off" aria-label="Message">
+          <button id="tsend" aria-label="Send">➤</button>
+        </form>
+      </div>
     </div>
     <div class="card wiz">
       <h2>3. Your screen, as the wizard</h2>
@@ -95,23 +124,31 @@ const bc = 'BroadcastChannel' in window ? new BroadcastChannel('hinh-demo') : nu
 let data, cur, chat = [], draft = '', override = false, edited = false, phase = 'idle';
 const short = (x, n) => (x.length > n ? x.slice(0, n - 1) + '…' : x);
 
+function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function roleCard(c, forWizard) {
+  const r = c.role || {};
+  const rows = [['You are', 'Trent, HVAC field technician'], ['Where', r.where], ["What's wrong", r.problem], ['You want', r.want], ...(r.know || []).map((k) => ['You know', k])]
+    .filter(([, v]) => v).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+  return `<div class="rolecard"><div class="tag"><span>${forWizard ? "The tester's role card" : 'Your role'}</span><span>${forWizard ? '' : 'only you see this'}</span></div>` +
+    `<dl>${rows}</dl>` + (r.secret ? `<div class="secret">${esc(r.secret)}</div>` : '') +
+    `<div class="tip">${forWizard ? `Opening line, if they need one: “${esc(c.trigger)}”` : 'Type like Trent would: short, on a phone, between jobs.'}</div></div>`;
+}
 function renderChat() {
   $('chat').innerHTML = '';
   for (const m of chat) { const d = document.createElement('div'); d.className = 'msg ' + m.role; d.textContent = m.text; $('chat').appendChild(d); }
   $('chat').scrollTop = 1e9;
 }
-function broadcast() { if (bc && !isTester) bc.postMessage({ type: 'state', chat, brief: cur && cur.tester_brief }); }
+function broadcast() { if (bc && !isTester) bc.postMessage({ type: 'state', chat, card: cur && roleCard(cur, false) }); }
 
 if (isTester) {
   document.body.classList.add('tester');
-  $('h1').textContent = 'HinH Assistant';
-  $('chatTitle').textContent = 'Assistant';
+  document.title = 'HinH Assistant';
+  $('phoneCard').classList.remove('card');
   if (bc) {
     bc.onmessage = (e) => {
       if (e.data.type !== 'state') return;
       chat = e.data.chat; renderChat();
-      $('testerBrief').innerHTML = '<b>You are the technician.</b> ' + (e.data.brief || '');
-      $('testerBrief').classList.remove('hidden');
+      $('testerRole').innerHTML = e.data.card || ''; $('testerRole').classList.remove('hidden');
     };
     bc.postMessage({ type: 'hello' });
   }
@@ -120,7 +157,10 @@ if (isTester) {
     $('text').value = ''; bc.postMessage({ type: 'user', text: t });
   });
 } else {
-  $('composer').style.display = 'none';
+  $('composer').addEventListener('submit', (e) => {
+    e.preventDefault(); const t = $('text').value.trim(); if (!t || phase !== 'idle') return;
+    $('text').value = ''; technicianSays(t);
+  });
   $('openTester').addEventListener('click', (e) => { e.preventDefault(); window.open('?view=tester', 'tester', 'width=520,height=760'); });
   if (bc) bc.onmessage = (e) => {
     if (e.data.type === 'hello') broadcast();
@@ -142,7 +182,7 @@ if (isTester) {
 
 function pick() {
   cur = data.cases.find((c) => c.id === $('case').value) || data.cases[0];
-  $('brief').innerHTML = '<b>The tester is told:</b> ' + cur.tester_brief + ` Their opening message could be: "${cur.trigger}"`;
+  $('brief').innerHTML = roleCard(cur, true);
   reset();
 }
 function reset() {

@@ -6,14 +6,19 @@
 <title>Assistant</title>
 <link rel="stylesheet" href="/style.css">
 </head>
-<body>
-<header><h1 id="title">Assistant</h1><span class="meta" id="status"></span></header>
-<main style="max-width:640px">
-  <div class="card">
-    <div class="chat" id="chat"><p class="muted" id="empty">Tell the assistant what you need.</p></div>
+<body class="testerpage">
+<main class="testerwrap">
+  <div class="rolecard hidden" id="role">
+    <div class="tag"><span>Your role</span><span>only you see this</span></div>
+    <p id="brief"></p>
+    <div class="tip">Type like your character would. The opening line is up to you.</div>
+  </div>
+  <div class="phone">
+    <div class="bar"><div class="avatar" id="initial">A</div><div class="who"><b id="title">Assistant</b><span id="status">replies in a minute</span></div></div>
+    <div class="chat" id="chat"></div>
     <form class="composer" id="form">
-      <input type="text" id="text" placeholder="Type a message" autocomplete="off" aria-label="Message">
-      <button id="send">Send</button>
+      <input type="text" id="text" placeholder="Message" autocomplete="off" aria-label="Message">
+      <button id="send" aria-label="Send">➤</button>
     </form>
   </div>
 </main>
@@ -31,6 +36,7 @@ async function poll() {
   if (!sid) { $('status').textContent = 'No session in this link. Ask the wizard for the link.'; return; }
   const st = await api(`/api/sessions/${sid}`);
   if (st.error) { $('status').textContent = st.error; return; }
+  if (st.role && st.role.brief) { $('brief').textContent = st.role.brief; $('role').classList.remove('hidden'); }
   if (st.messages.length !== shown) {
     shown = st.messages.length;
     $('chat').innerHTML = '';
@@ -40,10 +46,9 @@ async function poll() {
       d.textContent = m.text;
       $('chat').appendChild(d);
     }
-    if (!st.messages.length) $('chat').innerHTML = '<p class="muted">Tell the assistant what you need.</p>';
     $('chat').scrollTop = $('chat').scrollHeight;
   }
-  $('status').textContent = st.ended ? 'Session ended' : '';
+  if (st.ended) $('status').textContent = 'Session ended';
   $('send').disabled = st.ended;
 }
 
@@ -56,7 +61,9 @@ $('form').addEventListener('submit', async (e) => {
   poll();
 });
 
-fetch('/api/info').then((r) => r.json()).then((i) => { if (i.user_page_title) { document.title = i.user_page_title; document.getElementById('title').textContent = i.user_page_title; } });
+fetch('/api/info').then((r) => r.json()).then((i) => {
+  if (i.user_page_title) { document.title = i.user_page_title; $('title').textContent = i.user_page_title; $('initial').textContent = i.user_page_title.trim()[0].toUpperCase(); }
+});
 poll();
 setInterval(poll, 1500);
 </script>

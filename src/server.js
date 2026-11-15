@@ -35,6 +35,7 @@ function publicState(s, forWizard) {
     caseId: s.caseId,
     ended: s.ended,
     messages: s.messages,
+    role: s.caseDef ? { brief: s.caseDef.tester_brief, opening: s.caseDef.trigger } : null,
     ...(forWizard ? { drafts: s.drafts.map(({ worldAfter, ...d }) => d), logFile: s.logFile, ai: ai.name, scored: s.scored } : {}),
   };
 }

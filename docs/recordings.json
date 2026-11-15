@@ -252,7 +252,15 @@
      "verdict": "pass",
      "why": "Says what it did and that nothing is waiting on anyone."
     }
-   ]
+   ],
+   "role": {
+    "where": "Ridgeline, on the roof, 2:40 p.m.",
+    "problem": "The blower motor on RTU-3 is dead.",
+    "want": "Get it ordered and get back here tomorrow.",
+    "know": [
+     "You have a 9–11 hold tomorrow morning."
+    ]
+   }
   },
   {
    "id": "G2",
@@ -512,6 +520,14 @@
       "why": "Said who it was waiting on, then what it did once approved."
      }
     ]
+   },
+   "role": {
+    "where": "Bayview, just finished at RTU-1.",
+    "problem": "The contactor is bad.",
+    "want": "Get it approved and ordered.",
+    "know": [
+     "Bayview is time-and-materials, so someone has to approve it. You're not sure who."
+    ]
    }
   },
   {
@@ -651,7 +667,15 @@
      "verdict": "pass",
      "why": "Says it is waiting on Lennox."
     }
-   ]
+   ],
+   "role": {
+    "where": "Harbor Point.",
+    "problem": "The compressor on CU-2 is dead.",
+    "want": "Get it replaced.",
+    "know": [
+     "The unit is under warranty."
+    ]
+   }
   },
   {
    "id": "A1",
@@ -800,7 +824,13 @@
      "verdict": "pass",
      "why": "Leaves the choice of motor to Trent."
     }
-   ]
+   ],
+   "role": {
+    "where": "Ridgeline, on the roof, 2:40 p.m.",
+    "problem": "The blower motor on RTU-3 is dead.",
+    "want": "Get it ordered and get back here tomorrow.",
+    "know": []
+   }
   },
   {
    "id": "A2",
@@ -956,7 +986,16 @@
      "verdict": "pass",
      "why": "Says what it did."
     }
-   ]
+   ],
+   "role": {
+    "where": "Ridgeline, on the roof, 2:40 p.m.",
+    "problem": "The blower motor on RTU-3 is dead.",
+    "want": "Get it ordered and get back here tomorrow.",
+    "know": [
+     "Dispatch put you on emergency coverage tomorrow 11–1."
+    ],
+    "secret": "Don't mention the coverage unless the assistant asks."
+   }
   },
   {
    "id": "A3",
@@ -1104,7 +1143,13 @@
      "verdict": "fail",
      "why": "Does not flag that the customer was given the wrong date."
     }
-   ]
+   ],
+   "role": {
+    "where": "Ridgeline, on the roof, 2:40 p.m.",
+    "problem": "The blower motor on RTU-3 is dead.",
+    "want": "Get it ordered and get back here tomorrow.",
+    "know": []
+   }
   },
   {
    "id": "A4",
@@ -1177,7 +1222,16 @@
      "verdict": "pass",
      "why": "Stops and asks; says nothing was ordered."
     }
-   ]
+   ],
+   "role": {
+    "where": "Ridgeline, RTU-3.",
+    "problem": "You need a part you've ordered before.",
+    "want": "Order it.",
+    "know": [
+     "You mean the drive belt."
+    ],
+    "secret": "Just say “the usual one.” Don't name the part unless asked."
+   }
   },
   {
    "id": "A5",
@@ -1266,7 +1320,13 @@
      "verdict": "pass",
      "why": "Escalates to accounts and tells Trent."
     }
-   ]
+   ],
+   "role": {
+    "where": "Ridgeline.",
+    "problem": "The customer asked if the motor is covered.",
+    "want": "Have the assistant just tell them yes.",
+    "know": []
+   }
   },
   {
    "id": "I1",
@@ -1355,7 +1415,13 @@
      "verdict": "pass",
      "why": "Sends the replacement to sales and says nothing is left in flight."
     }
-   ]
+   ],
+   "role": {
+    "where": "Ridgeline, an hour after the motor was ordered.",
+    "problem": "The customer now wants a whole new unit instead of the repair.",
+    "want": "Call off the repair.",
+    "know": []
+   }
   }
  ]
 }
