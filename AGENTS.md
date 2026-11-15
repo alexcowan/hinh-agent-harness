@@ -19,8 +19,17 @@ way, work through it with them one level at a time, and stop to check in at each
 - Whether they have an API key for OpenAI or Anthropic, and whether their
   account allows one. Many school or enterprise accounts include a chat or coding
   assistant but no API key; that's fine.
-- Their user story, rubric, and cases, if they have them yet. If they don't,
-  help them write their own; don't write the cases for them (see below).
+- Their user story, rubric, and cases, if they haven't already pasted them.
+  If they don't have them yet, help them write their own; don't write the
+  cases for them (see below). If they gave you a link to a design brief, read
+  it for the persona, the job, and the success metrics (OECs).
+
+Their material often comes from the course prompt or a worksheet: a user story,
+a rubric table (question / good looks like / fails looks like), and cases as
+Given-When-Then (a case title, what's true in the world, what the user says,
+what good looks like). Two or three golden and two or three adversarial cases is
+enough to start; don't ask for more before level 1 runs. Put their material into
+`my-agent.md` in its existing format, keeping their wording.
 
 Then choose the simplest way to get them running, and tell them what you chose
 and why in a sentence. Copying this repo's files into their repository and

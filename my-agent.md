@@ -1,9 +1,11 @@
 # My agent
 
-This is the one file you write. Your AI turns it into the harness: the
-instructions, rubric, test data, tools, and cases in the other folders.
-Write it in plain language. When you change it, tell your AI:
-"Update the harness from my-agent.md and remove everything about HinH."
+Your story, rubric, and cases, in plain language. Write them yourselves (a
+worksheet or notes are fine) and give them to your AI; it puts them here in this
+format and builds the rest of the harness from this file: the instructions,
+rubric, test data, tools, and cases in the other folders. When you change this
+file, tell your AI: "Update the harness from my-agent.md and remove everything
+about HinH."
 
 Everything below is the HinH example. Replace it with your own.
 
