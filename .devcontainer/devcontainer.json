@@ -1,9 +1,20 @@
 {
   "name": "HinH agent harness",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
-  "forwardPorts": [3000],
-  "portsAttributes": {
-    "3000": { "label": "Wizard of Oz", "onAutoForward": "notify" }
+  "postCreateCommand": "npm install -g @openai/codex || true",
+  "postAttachCommand": {
+    "wizard-of-oz": "npm start"
   },
-  "hostRequirements": { "cpus": 2 }
+  "forwardPorts": [
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Wizard of Oz",
+      "onAutoForward": "silent"
+    }
+  },
+  "hostRequirements": {
+    "cpus": 2
+  }
 }
