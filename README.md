@@ -20,14 +20,16 @@ meant.
 
 Then paste this into your AI coding assistant, filling in the brackets. Use a
 mode that can work in a folder on your computer: in the ChatGPT app, that's
-**Codex** (the menu at the top left), with a project folder chosen.
+**Codex** (the menu at the top left), with a new, empty project folder chosen.
 
 > Here is a working example of a test harness for an agentic UX:
 > https://github.com/alexcowan/hinh-agent-harness. Read its AGENTS.md, then help
 > us build one like it for our agent, one level at a time. Ask us what you need
 > to know about our setup. You'll need to run commands and edit files in a
-> folder on our computer; if you can't (for example, you're a chat assistant,
-> not a coding agent), stop and tell us how to switch. If you can't reach that
+> folder on our computer. If you can't, don't try to hand off or start anything:
+> just tell us to open a coding agent that can (in the ChatGPT app, choose Codex
+> from the menu at the top left), choose a new, empty project folder, and paste
+> this whole prompt again there. If you can't reach that
 > link, help us get the files to you (for example, by downloading the ZIP into
 > this folder). Don't continue without reading AGENTS.md.
 > Our user story: [paste your user story]
